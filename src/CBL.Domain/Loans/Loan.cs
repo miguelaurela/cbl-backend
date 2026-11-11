@@ -69,6 +69,8 @@ public sealed class Loan
     /// <summary>Comprueba que el préstamo se puede eliminar (solo Pendiente).</summary>
     public void EnsureCanDelete() => EnsureCanModify();
 
+    /// <summary>Un préstamo solo se edita o elimina mientras siga Pendiente; si no, lanza <see cref="LoanNotModifiableException"/>.</summary>
+
     private void Decide(LoanStatus decision, Guid adminId, DateTime nowUtc)
     {
         if (Status != LoanStatus.Pending)
@@ -83,7 +85,7 @@ public sealed class Loan
         Version++;
     }
 
-    private void EnsureCanModify()
+    public void EnsureCanModify()
     {
         if (Status != LoanStatus.Pending)
         {
