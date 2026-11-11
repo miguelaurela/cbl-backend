@@ -1,4 +1,5 @@
 using System.Text;
+using CBL.Application.Abstractions;
 using CBL.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -28,6 +29,24 @@ public static class AuthExtensions
             .Configure<JwtOptions>((options, jwt) =>
             {
                 options.MapInboundClaims = false;
+
+                // Cierre de sesión: un token cuyo jti fue revocado responde 401 aunque su firma y su vida sean válidas.
+                options.Events = new JwtBearerEvents
+                {
+                    OnTokenValidated = context =>
+                    {
+                        var tokenId = context.Principal?.FindFirst("jti")?.Value;
+                        var revocations = context.HttpContext.RequestServices.GetRequiredService<ITokenRevocationStore>();
+
+                        if (tokenId is not null && revocations.IsRevoked(tokenId))
+                        {
+                            context.Fail("El token fue revocado por cierre de sesión.");
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,

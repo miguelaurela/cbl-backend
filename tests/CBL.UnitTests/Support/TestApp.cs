@@ -2,6 +2,8 @@ using CBL.Application.Abstractions;
 using CBL.Application.Loans.Commands;
 using CBL.Application.Loans.Queries;
 using CBL.Application.Parameters;
+using CBL.Application.Users;
+using CBL.Infrastructure.Security;
 using CBL.Domain.Loans;
 using CBL.Domain.Users;
 using CBL.Infrastructure.Persistence;
@@ -157,6 +159,20 @@ public sealed class TestApp : IDisposable
     public GetLoanByIdHandler GetLoanById => new(Loans, CurrentUser);
 
     public GetLoanStatusHandler GetLoanStatus => new(Loans, CurrentUser, Cache);
+
+    public CreateUserHandler CreateUser => new(Users, Hasher, Uow, Clock);
+
+    public UpdateUserHandler UpdateUser => new(Users, Hasher, Uow, CurrentUser);
+
+    public GetUsersHandler GetUsers => new(Users);
+
+    public GetUserByIdHandler GetUserById => new(Users);
+
+    public GetLoanLimitsHandler GetLoanLimits => new(Limits);
+
+    public UpdateLoanLimitsHandler UpdateLoanLimits => new(Parameters, Uow, CurrentUser, Clock, Cache);
+
+    public IPasswordHasher Hasher { get; } = new PasswordHasherAdapter();
 
     public void Dispose() => Db.Dispose();
 }

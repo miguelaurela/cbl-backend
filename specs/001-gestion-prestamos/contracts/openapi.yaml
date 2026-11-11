@@ -58,7 +58,8 @@ paths:
       summary: Cerrar sesión (FR-004)
       description: |
         Revoca el token actual (`jti`) hasta su expiración; cualquier uso posterior responde 401.
-        Idempotente para el mismo token mientras siga siendo válido.
+        Una vez revocado, el token responde 401 en cualquier endpoint, también en este (no es idempotente).
+        Los demás tokens del mismo usuario y los de otros usuarios siguen siendo válidos.
       responses:
         '204':
           description: Sesión cerrada.

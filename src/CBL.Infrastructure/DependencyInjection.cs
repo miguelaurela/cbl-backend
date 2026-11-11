@@ -72,6 +72,7 @@ public static class DependencyInjection
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IReadCache, MemoryReadCache>();
 
+        services.AddSingleton<ITokenRevocationStore, TokenRevocationStore>();
         services.AddSingleton<IPasswordHasher, PasswordHasherAdapter>();
         services.AddSingleton<ITokenService>(sp =>
             new JwtTokenService(sp.GetRequiredService<JwtOptions>(), sp.GetRequiredService<IClock>()));

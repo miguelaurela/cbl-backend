@@ -1,5 +1,6 @@
 using CBL.Api.Extensions;
 using CBL.Application.Auth.Login;
+using CBL.Application.Auth.Logout;
 
 namespace CBL.Api.Endpoints;
 
@@ -16,6 +17,15 @@ public static class AuthEndpoints
             .RequireRateLimiting(HttpPipelineExtensions.LoginRateLimitPolicy)
             .WithValidation<LoginRequest>()
             .WithSummary("Iniciar sesión (FR-001, FR-003)");
+
+        // Autenticado (política de respaldo): revoca el token actual hasta su expiración.
+        group.MapPost("/logout", (LogoutHandler handler) =>
+            {
+                handler.Handle();
+
+                return TypedResults.NoContent();
+            })
+            .WithSummary("Cerrar sesión (FR-004)");
 
         return app;
     }

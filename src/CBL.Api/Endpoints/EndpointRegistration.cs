@@ -7,6 +7,8 @@ public static class EndpointRegistration
     {
         app.MapAuthEndpoints();
         app.MapLoanEndpoints();
+        app.MapUserEndpoints();
+        app.MapParameterEndpoints();
 
         return app;
     }

@@ -25,10 +25,12 @@ public sealed class DatabaseFixture : IDisposable
             await InMemorySeeder.SeedAsync(db, scope.ServiceProvider.GetRequiredService<IClock>());
         }
 
-        // El contador de bloqueo vive en memoria del proceso: se limpia para que una prueba no afecte a la siguiente.
+        // El contador de bloqueo y la caché de límites viven en memoria del proceso y el restablecimiento de la base no
+        // los toca: se limpian para que una prueba no afecte a la siguiente.
         var attempts = Factory.Services.GetRequiredService<ILoginAttemptTracker>();
         attempts.Reset(TestUsers.BorrowerEmail);
         attempts.Reset(TestUsers.AdminEmail);
+        Factory.Services.GetRequiredService<IReadCache>().Remove(CacheKeys.LoanLimits);
     }
 
     /// <summary>Borra todas las filas (respetando las claves foráneas) y vuelve a aplicar el seed del .sqlproj.</summary>
