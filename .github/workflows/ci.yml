@@ -1,0 +1,117 @@
+name: CI
+
+# Compila (incluido el .sqlproj → .dacpac), ejecuta las pruebas unitarias y las de integración contra un SQL Server real
+# (contenedor de servicio) con el esquema desplegado desde el .dacpac con SqlPackage. Las pruebas de integración SOLO
+# corren aquí: en local se omiten salvo que se defina CBL_TEST_SQL (ADR-0021, ADR-0016).
+
+on:
+  push:
+    branches: ["**"]
+    tags-ignore: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  # Contraseña TEMPORAL del contenedor de SQL Server de CI: no protege nada (el contenedor muere con el job) y NO es un
+  # secreto del repositorio. Debe coincidir con la del servicio de más abajo.
+  CI_SQL_PASSWORD: "Cbl_Ci_Only_2026!"
+  CI_SQL_CONNECTION: "Server=localhost,1433;Database=CblTest;User Id=sa;Password=Cbl_Ci_Only_2026!;TrustServerCertificate=True"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Cbl_Ci_Only_2026!"
+        ports:
+          - 1433:1433
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restaurar
+        run: dotnet restore CBL.sln
+
+      - name: Compilar (incluye el .sqlproj → .dacpac)
+        run: dotnet build CBL.sln -c Release --no-restore
+
+      - name: Pruebas unitarias
+        run: dotnet test tests/CBL.UnitTests -c Release --no-build --logger "trx;LogFileName=unit.trx" --results-directory TestResults
+
+      - name: Instalar SqlPackage
+        run: |
+          dotnet tool install -g microsoft.sqlpackage --version 170.5.96
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+
+      - name: Desplegar el esquema en SQL Server con SqlPackage
+        run: |
+          # El puerto abre antes de que SQL Server acepte inicios de sesión: se reintenta.
+          for attempt in $(seq 1 18); do
+            if sqlpackage /Action:Publish \
+                 /SourceFile:db/CBL.Database/bin/Release/CBL.Database.dacpac \
+                 /TargetConnectionString:"$CI_SQL_CONNECTION"; then
+              exit 0
+            fi
+            echo "SQL Server todavía no está listo (intento $attempt de 18); espero 10 s..."
+            sleep 10
+          done
+          echo "::error::No se pudo desplegar el .dacpac en SQL Server"
+          exit 1
+
+      - name: Informe de despliegue (DeployReport) en main
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          # Tras el despliegue no debe quedar ningún cambio pendiente entre el .dacpac y la base.
+          sqlpackage /Action:DeployReport \
+            /SourceFile:db/CBL.Database/bin/Release/CBL.Database.dacpac \
+            /TargetConnectionString:"$CI_SQL_CONNECTION" \
+            /OutputPath:TestResults/deploy-report.xml
+
+      - name: Pruebas de integración (SQL Server real)
+        env:
+          CBL_TEST_SQL: ${{ env.CI_SQL_CONNECTION }}
+        run: dotnet test tests/CBL.IntegrationTests -c Release --no-build --logger "trx;LogFileName=integration.trx" --results-directory TestResults
+
+      - name: Comprobar que ninguna prueba de integración se omitió
+        run: |
+          if grep -q 'outcome="NotExecuted"' TestResults/integration.trx; then
+            echo "::error::Hay pruebas de integración omitidas: CBL_TEST_SQL debería estar definida en CI"
+            exit 1
+          fi
+          echo "Pruebas de integración ejecutadas: $(grep -c 'outcome="Passed"' TestResults/integration.trx)"
+
+      - name: Publicar el .dacpac como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbl-database-dacpac
+          path: db/CBL.Database/bin/Release/CBL.Database.dacpac
+          if-no-files-found: warn
+
+      - name: Publicar resultados de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/
+          if-no-files-found: ignore
