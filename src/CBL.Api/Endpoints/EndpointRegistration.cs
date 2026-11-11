@@ -6,6 +6,7 @@ public static class EndpointRegistration
     public static IEndpointRouteBuilder MapCblEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapAuthEndpoints();
+        app.MapLoanEndpoints();
 
         return app;
     }

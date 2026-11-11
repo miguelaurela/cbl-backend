@@ -142,18 +142,18 @@ Solución en la raíz del repositorio, según el plan: `src/CBL.Domain`, `src/CB
 
 ### Pruebas de la historia 2 ⚠️
 
-- [ ] T056 [P] [US2] Pruebas de dominio en `tests/CBL.UnitTests/Domain/LoanRequestTests.cs`: plazo 0 y 61 rechazados, 1 y 60 aceptados; monto ≤ 0 y con más de 2 decimales rechazados; una solicitud válida nace `Pending` con `Version` 1
-- [ ] T057 [P] [US2] Pruebas de `RequestLoanHandler` en `tests/CBL.UnitTests/Loans/RequestLoanHandlerTests.cs`: monto igual al mínimo y al máximo aceptado; por debajo del mínimo o por encima del máximo rechazado con error en `amount`; plazo inválido con error en `termMonths`; el prestamista sale de `ICurrentUser`; los límites se leen de `SystemParameters` mediante `IReadCache`
-- [ ] T058 [P] [US2] Pruebas de validadores en `tests/CBL.UnitTests/Loans/CreateLoanRequestValidatorTests.cs` (monto > 0 con 2 decimales como máximo; plazo entero 1–60)
-- [ ] T059 [P] [US2] Pruebas de integración en `tests/CBL.IntegrationTests/LoanRequestTests.cs`: 201 con `Location` y estado `Pending`; 422 con `errors.amount` o `errors.termMonths`; Admin → 403; sin token → 401
+- [x] T056 [P] [US2] Pruebas de dominio en `tests/CBL.UnitTests/Domain/LoanRequestTests.cs`: plazo 0 y 61 rechazados, 1 y 60 aceptados; monto ≤ 0 y con más de 2 decimales rechazados; una solicitud válida nace `Pending` con `Version` 1
+- [x] T057 [P] [US2] Pruebas de `RequestLoanHandler` en `tests/CBL.UnitTests/Loans/RequestLoanHandlerTests.cs`: monto igual al mínimo y al máximo aceptado; por debajo del mínimo o por encima del máximo rechazado con error en `amount`; plazo inválido con error en `termMonths`; el prestamista sale de `ICurrentUser`; los límites se leen de `SystemParameters` mediante `IReadCache`
+- [x] T058 [P] [US2] Pruebas de validadores en `tests/CBL.UnitTests/Loans/CreateLoanRequestValidatorTests.cs` (monto > 0 con 2 decimales como máximo; plazo entero 1–60)
+- [x] T059 [P] [US2] Pruebas de integración en `tests/CBL.IntegrationTests/LoanRequestTests.cs`: 201 con `Location` y estado `Pending`; 422 con `errors.amount` o `errors.termMonths`; Admin → 403; sin token → 401
 
 ### Implementación de la historia 2
 
-- [ ] T060 [P] [US2] Crear en `src/CBL.Application/Loans/` `LoanDto` (campos del contrato: `id`, `borrowerId`, `borrowerName`, `borrowerEmail`, `amount`, `termMonths`, `status`, `createdAt`, `decidedAt`, `decidedById`, `decidedByName`, `version`), `CreateLoanRequest` y su validador; nunca se expone una entidad
-- [ ] T061 [P] [US2] Crear `src/CBL.Application/Parameters/LoanLimitsReader.cs` que lee `LoanAmountMin` y `LoanAmountMax` de `ISystemParameterRepository` a través de `IReadCache` con la clave `loan-limits` (expiración absoluta de 5 minutos)
-- [ ] T062 [US2] Implementar `src/CBL.Application/Loans/RequestLoan/RequestLoanHandler.cs`: tomar el prestamista de `ICurrentUser`, validar contra los límites vigentes y guardar el préstamo `Pending` (dep: T060, T061, T011)
-- [ ] T063 [US2] Crear `src/CBL.Api/Endpoints/LoanEndpoints.cs` con `POST /api/loans` (`BorrowerOnly`, 201 con `Location`) (dep: T062, T039)
-- [ ] T064 [US2] Registrar los servicios de la historia en `src/CBL.Application/DependencyInjection.cs` y comprobar T056–T059 en verde (dep: T063)
+- [x] T060 [P] [US2] Crear en `src/CBL.Application/Loans/` `LoanDto` (campos del contrato: `id`, `borrowerId`, `borrowerName`, `borrowerEmail`, `amount`, `termMonths`, `status`, `createdAt`, `decidedAt`, `decidedById`, `decidedByName`, `version`), `CreateLoanRequest` y su validador; nunca se expone una entidad
+- [x] T061 [P] [US2] Crear `src/CBL.Application/Parameters/LoanLimitsReader.cs` que lee `LoanAmountMin` y `LoanAmountMax` de `ISystemParameterRepository` a través de `IReadCache` con la clave `loan-limits` (expiración absoluta de 5 minutos)
+- [x] T062 [US2] Implementar `src/CBL.Application/Loans/RequestLoan/RequestLoanHandler.cs`: tomar el prestamista de `ICurrentUser`, validar contra los límites vigentes y guardar el préstamo `Pending` (dep: T060, T061, T011)
+- [x] T063 [US2] Crear `src/CBL.Api/Endpoints/LoanEndpoints.cs` con `POST /api/loans` (`BorrowerOnly`, 201 con `Location`) (dep: T062, T039)
+- [x] T064 [US2] Registrar los servicios de la historia en `src/CBL.Application/DependencyInjection.cs` y comprobar T056–T059 en verde (dep: T063)
 
 **Punto de control**: las historias 1 y 2 funcionan de forma independiente.
 
@@ -167,17 +167,17 @@ Solución en la raíz del repositorio, según el plan: `src/CBL.Domain`, `src/CB
 
 ### Pruebas de la historia 3 ⚠️
 
-- [ ] T065 [P] [US3] Pruebas de consultas en `tests/CBL.UnitTests/Loans/LoanQueriesTests.cs`: `GetMyLoans` devuelve solo los propios; `GetLoanById` devuelve `NotFoundException` para un préstamo ajeno; `GetLoanStatus` con acierto de caché no llama al repositorio, la autorización se evalúa antes de devolver el dato cacheado y el prestamista B no puede leer el estado cacheado del A
-- [ ] T066 [P] [US3] Pruebas de `UpdateLoanHandler` y `DeleteLoanHandler` en `tests/CBL.UnitTests/Loans/UpdateDeleteLoanHandlerTests.cs`: el dueño edita o elimina solo en `Pending`; un préstamo decidido lanza conflicto; un préstamo ajeno devuelve `NotFoundException`; al editar se revalidan monto y plazo con los límites vigentes; un Admin elimina solo `Pending`
-- [ ] T067 [P] [US3] Pruebas de integración en `tests/CBL.IntegrationTests/MyLoansTests.cs`: un prestamista ve solo sus préstamos; el préstamo ajeno devuelve 404; editar y eliminar en `Pending` funciona y en un préstamo decidido da 409; `GET /api/loans/{id}/status` refleja el cambio
+- [x] T065 [P] [US3] Pruebas de consultas en `tests/CBL.UnitTests/Loans/LoanQueriesTests.cs`: `GetMyLoans` devuelve solo los propios; `GetLoanById` devuelve `NotFoundException` para un préstamo ajeno; `GetLoanStatus` con acierto de caché no llama al repositorio, la autorización se evalúa antes de devolver el dato cacheado y el prestamista B no puede leer el estado cacheado del A
+- [x] T066 [P] [US3] Pruebas de `UpdateLoanHandler` y `DeleteLoanHandler` en `tests/CBL.UnitTests/Loans/UpdateDeleteLoanHandlerTests.cs`: el dueño edita o elimina solo en `Pending`; un préstamo decidido lanza conflicto; un préstamo ajeno devuelve `NotFoundException`; al editar se revalidan monto y plazo con los límites vigentes; un Admin elimina solo `Pending`
+- [x] T067 [P] [US3] Pruebas de integración en `tests/CBL.IntegrationTests/MyLoansTests.cs`: un prestamista ve solo sus préstamos; el préstamo ajeno devuelve 404; editar y eliminar en `Pending` funciona y en un préstamo decidido da 409; `GET /api/loans/{id}/status` refleja el cambio
 
 ### Implementación de la historia 3
 
-- [ ] T068 [P] [US3] Implementar `GetMyLoansHandler` y `GetLoanByIdHandler` en `src/CBL.Application/Loans/Queries/` (dueño o Admin; si no, `NotFoundException` para evitar enumeración)
-- [ ] T069 [P] [US3] Implementar `src/CBL.Application/Loans/Queries/GetLoanStatusHandler.cs` con lectura a través de `IReadCache`: clave `loan-status:{id}`, expiración absoluta de 5 minutos, la caché guarda estado y dueño y la autorización se evalúa siempre antes de responder
-- [ ] T070 [P] [US3] Implementar `UpdateLoanHandler` y `DeleteLoanHandler` (con validadores) en `src/CBL.Application/Loans/Commands/`: el Borrower dueño edita o elimina solo en `Pending`; un Admin elimina solo `Pending`; al editar se revalidan los límites vigentes
-- [ ] T071 [US3] Añadir a `src/CBL.Api/Endpoints/LoanEndpoints.cs` `GET /api/loans/mine` (`BorrowerOnly`), `GET /api/loans/{id}`, `GET /api/loans/{id}/status`, `PUT /api/loans/{id}` (`BorrowerOnly`) y `DELETE /api/loans/{id}` (dueño o Admin) con las respuestas del contrato (dep: T068, T069, T070)
-- [ ] T072 [US3] Registrar los servicios de la historia en `src/CBL.Application/DependencyInjection.cs` y comprobar T065–T067 en verde (dep: T071)
+- [x] T068 [P] [US3] Implementar `GetMyLoansHandler` y `GetLoanByIdHandler` en `src/CBL.Application/Loans/Queries/` (dueño o Admin; si no, `NotFoundException` para evitar enumeración)
+- [x] T069 [P] [US3] Implementar `src/CBL.Application/Loans/Queries/GetLoanStatusHandler.cs` con lectura a través de `IReadCache`: clave `loan-status:{id}`, expiración absoluta de 5 minutos, la caché guarda estado y dueño y la autorización se evalúa siempre antes de responder
+- [x] T070 [P] [US3] Implementar `UpdateLoanHandler` y `DeleteLoanHandler` (con validadores) en `src/CBL.Application/Loans/Commands/`: el Borrower dueño edita o elimina solo en `Pending`; un Admin elimina solo `Pending`; al editar se revalidan los límites vigentes
+- [x] T071 [US3] Añadir a `src/CBL.Api/Endpoints/LoanEndpoints.cs` `GET /api/loans/mine` (`BorrowerOnly`), `GET /api/loans/{id}`, `GET /api/loans/{id}/status`, `PUT /api/loans/{id}` (`BorrowerOnly`) y `DELETE /api/loans/{id}` (dueño o Admin) con las respuestas del contrato (dep: T068, T069, T070)
+- [x] T072 [US3] Registrar los servicios de la historia en `src/CBL.Application/DependencyInjection.cs` y comprobar T065–T067 en verde (dep: T071)
 
 **Punto de control**: las historias 1 a 3 son funcionales.
 
@@ -191,13 +191,13 @@ Solución en la raíz del repositorio, según el plan: `src/CBL.Domain`, `src/CB
 
 ### Pruebas de la historia 4 ⚠️
 
-- [ ] T073 [P] [US4] Pruebas de `GetAllLoansHandler` en `tests/CBL.UnitTests/Loans/GetAllLoansHandlerTests.cs`: sin filtro devuelve todos; con `status` devuelve solo ese estado; orden del más reciente al más antiguo; incluye nombre y correo del prestamista; sin paginación
-- [ ] T074 [P] [US4] Pruebas de integración en `tests/CBL.IntegrationTests/AdminLoansListTests.cs`: el Admin ve los préstamos de todos; el filtro `?status=Pending` funciona; un Borrower recibe 403; sin token 401
+- [x] T073 [P] [US4] Pruebas de `GetAllLoansHandler` en `tests/CBL.UnitTests/Loans/GetAllLoansHandlerTests.cs`: sin filtro devuelve todos; con `status` devuelve solo ese estado; orden del más reciente al más antiguo; incluye nombre y correo del prestamista; sin paginación
+- [x] T074 [P] [US4] Pruebas de integración en `tests/CBL.IntegrationTests/AdminLoansListTests.cs`: el Admin ve los préstamos de todos; el filtro `?status=Pending` funciona; un Borrower recibe 403; sin token 401
 
 ### Implementación de la historia 4
 
-- [ ] T075 [US4] Implementar `src/CBL.Application/Loans/Queries/GetAllLoansHandler.cs` y el método de listado con filtro opcional por estado en `LoanRepository` (más recientes primero, apoyado en el índice `(Status, CreatedAt)`), sin paginación (dep: T028)
-- [ ] T076 [US4] Añadir `GET /api/loans` (`AdminOnly`, parámetro opcional `status`) a `src/CBL.Api/Endpoints/LoanEndpoints.cs`, registrar el servicio y comprobar T073 y T074 en verde (dep: T075)
+- [x] T075 [US4] Implementar `src/CBL.Application/Loans/Queries/GetAllLoansHandler.cs` y el método de listado con filtro opcional por estado en `LoanRepository` (más recientes primero, apoyado en el índice `(Status, CreatedAt)`), sin paginación (dep: T028)
+- [x] T076 [US4] Añadir `GET /api/loans` (`AdminOnly`, parámetro opcional `status`) a `src/CBL.Api/Endpoints/LoanEndpoints.cs`, registrar el servicio y comprobar T073 y T074 en verde (dep: T075)
 
 **Punto de control**: las historias 1 a 4 funcionan.
 
@@ -211,17 +211,17 @@ Solución en la raíz del repositorio, según el plan: `src/CBL.Domain`, `src/CB
 
 ### Pruebas de la historia 5 ⚠️
 
-- [ ] T077 [P] [US5] Pruebas de dominio en `tests/CBL.UnitTests/Domain/LoanDecisionTests.cs`: `Approve` y `Reject` desde `Pending` fijan `DecidedByUserId` y `DecidedAt` e incrementan `Version`; una segunda decisión lanza `InvalidLoanTransitionException`; `UpdateTerms` y `EnsureCanDelete` tras decidir lanzan `LoanNotModifiableException`
-- [ ] T078 [P] [US5] Pruebas de `ApproveLoanHandler` y `RejectLoanHandler` en `tests/CBL.UnitTests/Loans/DecideLoanHandlerTests.cs`: se añade una fila de auditoría con el id del admin y la fecha; un único `SaveChangesAsync`; la segunda decisión da conflicto; `loan-status:{id}` se elimina solo después de guardar y no se elimina si el guardado falla; un `version` opcional que no coincide da conflicto; `DbUpdateConcurrencyException` se traduce a `ConcurrencyConflictException`
-- [ ] T079 [P] [US5] Prueba de concurrencia con EF InMemory en `tests/CBL.UnitTests/Persistence/LoanConcurrencyTests.cs`: dos contextos sobre el mismo almacén y el mismo préstamo; el segundo `SaveChangesAsync` lanza `DbUpdateConcurrencyException`, lo que demuestra que el token `Version` funciona
-- [ ] T080 [P] [US5] Pruebas de integración en `tests/CBL.IntegrationTests/DecisionTests.cs`: Borrower aprobando → 403; aprobar cambia el estado y deja una fila en `LoanDecisionAudit`; decidir dos veces → 409 sin cambios; el estado consultado después de decidir es el nuevo; un Admin elimina un préstamo `Pending` y uno decidido da 409
-- [ ] T081 [P] [US5] Prueba de integración de carrera en `tests/CBL.IntegrationTests/ConcurrencyRaceTests.cs`: dos decisiones simultáneas con `Task.WhenAll`; exactamente una responde 200 y la otra 409, y existe una sola fila de auditoría
+- [x] T077 [P] [US5] Pruebas de dominio en `tests/CBL.UnitTests/Domain/LoanDecisionTests.cs`: `Approve` y `Reject` desde `Pending` fijan `DecidedByUserId` y `DecidedAt` e incrementan `Version`; una segunda decisión lanza `InvalidLoanTransitionException`; `UpdateTerms` y `EnsureCanDelete` tras decidir lanzan `LoanNotModifiableException`
+- [x] T078 [P] [US5] Pruebas de `ApproveLoanHandler` y `RejectLoanHandler` en `tests/CBL.UnitTests/Loans/DecideLoanHandlerTests.cs`: se añade una fila de auditoría con el id del admin y la fecha; un único `SaveChangesAsync`; la segunda decisión da conflicto; `loan-status:{id}` se elimina solo después de guardar y no se elimina si el guardado falla; un `version` opcional que no coincide da conflicto; `DbUpdateConcurrencyException` se traduce a `ConcurrencyConflictException`
+- [x] T079 [P] [US5] Prueba de concurrencia con EF InMemory en `tests/CBL.UnitTests/Persistence/LoanConcurrencyTests.cs`: dos contextos sobre el mismo almacén y el mismo préstamo; el segundo `SaveChangesAsync` lanza `DbUpdateConcurrencyException`, lo que demuestra que el token `Version` funciona
+- [x] T080 [P] [US5] Pruebas de integración en `tests/CBL.IntegrationTests/DecisionTests.cs`: Borrower aprobando → 403; aprobar cambia el estado y deja una fila en `LoanDecisionAudit`; decidir dos veces → 409 sin cambios; el estado consultado después de decidir es el nuevo; un Admin elimina un préstamo `Pending` y uno decidido da 409
+- [x] T081 [P] [US5] Prueba de integración de carrera en `tests/CBL.IntegrationTests/ConcurrencyRaceTests.cs`: dos decisiones simultáneas con `Task.WhenAll`; exactamente una responde 200 y la otra 409, y existe una sola fila de auditoría
 
 ### Implementación de la historia 5
 
-- [ ] T082 [US5] Implementar `ApproveLoanHandler` y `RejectLoanHandler` (con `DecideLoanRequest` de `version` opcional) en `src/CBL.Application/Loans/Commands/`: cargar el préstamo, llamar al método de la entidad, añadir la auditoría con el `CorrelationId` y guardar todo en **un único** `SaveChangesAsync`; invalidar `loan-status:{id}` solo tras el guardado correcto (dep: T011, T012, T029, T032)
-- [ ] T083 [US5] Añadir `POST /api/loans/{id}/approve` y `POST /api/loans/{id}/reject` (`AdminOnly`, cuerpo opcional) a `src/CBL.Api/Endpoints/LoanEndpoints.cs` con 200/401/403/404/409/429 según el contrato (dep: T082)
-- [ ] T084 [US5] Registrar los servicios de la historia en `src/CBL.Application/DependencyInjection.cs` y comprobar T077–T081 en verde (dep: T083)
+- [x] T082 [US5] Implementar `ApproveLoanHandler` y `RejectLoanHandler` (con `DecideLoanRequest` de `version` opcional) en `src/CBL.Application/Loans/Commands/`: cargar el préstamo, llamar al método de la entidad, añadir la auditoría con el `CorrelationId` y guardar todo en **un único** `SaveChangesAsync`; invalidar `loan-status:{id}` solo tras el guardado correcto (dep: T011, T012, T029, T032)
+- [x] T083 [US5] Añadir `POST /api/loans/{id}/approve` y `POST /api/loans/{id}/reject` (`AdminOnly`, cuerpo opcional) a `src/CBL.Api/Endpoints/LoanEndpoints.cs` con 200/401/403/404/409/429 según el contrato (dep: T082)
+- [x] T084 [US5] Registrar los servicios de la historia en `src/CBL.Application/DependencyInjection.cs` y comprobar T077–T081 en verde (dep: T083)
 
 **Punto de control — CORTE DE MVP**: con las historias 1 a 5 (más las tareas T102, T104 y T108 de la última fase) está el flujo central completo: login → solicitar → listar → aprobar o rechazar → estado actualizado.
 
