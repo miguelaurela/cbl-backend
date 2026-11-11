@@ -61,7 +61,8 @@ Entrega
 - What I changed by hand and why / Qué cambié a mano y por qué: nada en el contenido; solo se eliminó el informe de impacto temporal (comentario HTML) antes del commit, como indica la skill. Aprobada por el usuario. / Nothing in the content; only the temporary sync-impact HTML comment was removed before the commit, as the skill instructs. Approved by the user.
 
 ## Phase 2 – /speckit.specify / Fase 2 – /speckit.specify
-- Date / Fecha:
+- Agent / Agente: Claude Code (`/speckit-specify`). Rama `001-gestion-prestamos` creada a mano porque no hay extensión de git instalada (sin hook `before_specify`). / Branch `001-gestion-prestamos` created by hand because no git extension is installed (no `before_specify` hook).
+- Date / Fecha: 2026-11-11
 - Prompt used / Prompt usado:
 
 ```
@@ -120,8 +121,8 @@ Fuera de alcance
 - Cálculo de intereses, cuotas, desembolsos y pagos.
 - Registro público de usuarios, recuperación de contraseña y notificaciones por correo.
 ```
-- What it generated / Qué generó:
-- What I changed by hand and why / Qué cambié a mano y por qué:
+- What it generated / Qué generó: `specs/001-gestion-prestamos/spec.md` (8 historias de usuario: 5 P1 y 3 P2; 30 requisitos funcionales; 10 criterios de éxito; casos límite, supuestos y fuera de alcance; 0 marcadores de aclaración), `specs/001-gestion-prestamos/checklists/requirements.md` (validado, 1 iteración) y `.specify/feature.json`. Encabezados traducidos al español; IDs `FR-###`/`SC-###` conservados. Supuestos añadidos por el agente para confirmar en la Fase 3: un admin no desactiva su propia cuenta; la desactivación surte efecto a más tardar al expirar la sesión; correo sin distinguir mayúsculas; los límites nuevos no afectan solicitudes ya registradas.
+- What I changed by hand and why / Qué cambié a mano y por qué: nada; aprobada por el usuario tal como se generó. Antes de la aprobación el agente retiró "tabla de límites" del FR-023 por ser un detalle de implementación. / Nothing; approved by the user as generated. Before approval the agent removed "tabla de límites" from FR-023 as an implementation detail.
 
 ## Phase 3 – /speckit.clarify / Fase 3 – /speckit.clarify
 - Date / Fecha:
