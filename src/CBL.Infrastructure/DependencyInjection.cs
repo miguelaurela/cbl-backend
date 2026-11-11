@@ -72,6 +72,12 @@ public static class DependencyInjection
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IReadCache, MemoryReadCache>();
 
+        services.AddSingleton<IPasswordHasher, PasswordHasherAdapter>();
+        services.AddSingleton<ITokenService>(sp =>
+            new JwtTokenService(sp.GetRequiredService<JwtOptions>(), sp.GetRequiredService<IClock>()));
+        services.AddSingleton<ILoginAttemptTracker>(sp =>
+            new LoginAttemptTracker(sp.GetRequiredService<AuthOptions>(), sp.GetRequiredService<IClock>()));
+
         // Opciones validadas al crearse; Program.cs las resuelve al arrancar para fallar rápido si algo falta.
         services.AddSingleton(sp =>
         {

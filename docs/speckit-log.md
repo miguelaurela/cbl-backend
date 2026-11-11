@@ -179,5 +179,10 @@ Fuera de alcance
 - What I changed by hand and why / Qué cambié a mano y por qué: nada; las correcciones las aplicó el agente y las aprobó el usuario. / Nothing; corrections were applied by the agent and approved by the user.
 
 ## Phase 7 – /speckit.implement / Fase 7 – /speckit.implement
-- Date / Fecha:
+- Agent / Agente: Claude Code (`/speckit-implement`). Rama `001-gestion-prestamos`, integrada en `main` con `--no-ff` en cada punto de control (regla del usuario: todo se commitea y se sube; `main` es la rama donde debe estar todo).
+- Date / Fecha: 2026-11-11 (en curso)
 - Notes / Notas:
+  - Entorno: SDK de .NET 8.0.428 instalado con winget; `gh` instalado y repositorios creados por una sesión aparte (backend `miguelaurela/cbl-backend`, frontend `miguelaurela/cbl-frontend`, ambos públicos).
+  - Progreso: T001–T043 (Preparación y Fundamentos) y T044–T055 (US1 – iniciar sesión). Cada punto de control: compila sin advertencias, pruebas unitarias en verde. Las pruebas de integración se omiten sin `CBL_TEST_SQL` (ADR-0021); se verificaron además contra EF InMemory con el atajo opcional `CBL_TEST_INMEMORY=1` (12 de 12 de US1). El primer recorrido real contra SQL Server sigue pendiente de CI (T104).
+  - Desviaciones respecto a `tasks.md`: `CurrentUser` vive en `CBL.Api` (depende de `HttpContext`); `AddApplication()` registra por escaneo toda clase `*Handler`; `Jwt__Key` es obligatoria siempre (también en Development); `LoginAttemptTracker` usa un diccionario con reloj inyectado en vez de `IMemoryCache` (pruebas deterministas y memoria acotada: entradas que caducan y máximo de 10.000); Swagger va antes de la autorización porque la política de respaldo "todo autenticado" también se aplica a rutas sin endpoint; las rutas inexistentes responden 401 por la misma razón; `ICorrelationIdAccessor` añadido como puerto para la auditoría.
+  - Hallazgo en la prueba de humo: Swagger respondía 401 tras `UseAuthorization`; corregido moviéndolo antes.

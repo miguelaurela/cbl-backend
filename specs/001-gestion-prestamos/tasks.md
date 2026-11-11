@@ -114,21 +114,21 @@ Solución en la raíz del repositorio, según el plan: `src/CBL.Domain`, `src/CB
 
 ### Pruebas de la historia 1 ⚠️ (escribir primero y comprobar que fallan)
 
-- [ ] T044 [P] [US1] Pruebas de `LoginHandler` en `tests/CBL.UnitTests/Auth/LoginHandlerTests.cs`: correo inexistente, contraseña incorrecta y usuario desactivado devuelven el mismo 401 genérico; éxito devuelve `accessToken`, `tokenType` `Bearer`, `expiresAt` y `user`; el 6.º intento con el mismo correo (exista o no) lanza `AccountLockedException`; un correo con otras mayúsculas inicia sesión como el mismo usuario
-- [ ] T045 [P] [US1] Pruebas de `LoginAttemptTracker` en `tests/CBL.UnitTests/Auth/LoginAttemptTrackerTests.cs`: 5 fallos en la ventana de 15 minutos bloquean, el correo se normaliza (mayúsculas) y el bloqueo expira, con valores configurables
-- [ ] T046 [P] [US1] Pruebas de `JwtTokenService` en `tests/CBL.UnitTests/Auth/JwtTokenServiceTests.cs`: claims `sub`, `email`, `role` y `jti`, HS256, expiración = ahora + 10 minutos y rechazo de una clave de menos de 32 bytes
-- [ ] T047 [P] [US1] Prueba del seed en `tests/CBL.UnitTests/Auth/SeedPasswordHashTests.cs`: el hash de `Seed.sql` verifica la contraseña `123` con `PasswordHasher<User>`
-- [ ] T048 [P] [US1] Pruebas de integración en `tests/CBL.IntegrationTests/AuthenticationTests.cs`: sin token → 401; token vencido → 401; login correcto; credenciales incorrectas → 401 genérico; con el límite de `login` por defecto, 5 fallos con el mismo correo (exista o no) y un 6.º intento → 423 con `Retry-After`; en una prueba aparte, con el límite de `login` bajado a 3/min por la configuración de la fábrica de pruebas, el 4.º intento → 429; todos los errores en `application/problem+json`
+- [x] T044 [P] [US1] Pruebas de `LoginHandler` en `tests/CBL.UnitTests/Auth/LoginHandlerTests.cs`: correo inexistente, contraseña incorrecta y usuario desactivado devuelven el mismo 401 genérico; éxito devuelve `accessToken`, `tokenType` `Bearer`, `expiresAt` y `user`; el 6.º intento con el mismo correo (exista o no) lanza `AccountLockedException`; un correo con otras mayúsculas inicia sesión como el mismo usuario
+- [x] T045 [P] [US1] Pruebas de `LoginAttemptTracker` en `tests/CBL.UnitTests/Auth/LoginAttemptTrackerTests.cs`: 5 fallos en la ventana de 15 minutos bloquean, el correo se normaliza (mayúsculas) y el bloqueo expira, con valores configurables
+- [x] T046 [P] [US1] Pruebas de `JwtTokenService` en `tests/CBL.UnitTests/Auth/JwtTokenServiceTests.cs`: claims `sub`, `email`, `role` y `jti`, HS256, expiración = ahora + 10 minutos y rechazo de una clave de menos de 32 bytes
+- [x] T047 [P] [US1] Prueba del seed en `tests/CBL.UnitTests/Auth/SeedPasswordHashTests.cs`: el hash de `Seed.sql` verifica la contraseña `123` con `PasswordHasher<User>`
+- [x] T048 [P] [US1] Pruebas de integración en `tests/CBL.IntegrationTests/AuthenticationTests.cs`: sin token → 401; token vencido → 401; login correcto; credenciales incorrectas → 401 genérico; con el límite de `login` por defecto, 5 fallos con el mismo correo (exista o no) y un 6.º intento → 423 con `Retry-After`; en una prueba aparte, con el límite de `login` bajado a 3/min por la configuración de la fábrica de pruebas, el 4.º intento → 429; todos los errores en `application/problem+json`
 
 ### Implementación de la historia 1
 
-- [ ] T049 [P] [US1] Crear `LoginRequest`, `LoginResponse` y su validador en `src/CBL.Application/Auth/Login/` (correo `maxLength 256`, contraseña `maxLength 200`)
-- [ ] T050 [P] [US1] Implementar `src/CBL.Infrastructure/Security/PasswordHasherAdapter.cs` sobre `PasswordHasher<User>` (PBKDF2) con comparación segura
-- [ ] T051 [P] [US1] Implementar `src/CBL.Infrastructure/Security/JwtTokenService.cs` (HS256, 10 minutos, claims `sub`, `email`, `role`, `jti`) (dep: T037)
-- [ ] T052 [P] [US1] Implementar `src/CBL.Infrastructure/Security/LoginAttemptTracker.cs` en memoria sobre `IMemoryCache` por correo normalizado, con `Auth:MaxFailedAttempts` y `Auth:LockoutMinutes` validados al arrancar; las entradas caducan al terminar la ventana de 15 minutos y el almacén tiene límite de tamaño, para que correos arbitrarios no hagan crecer la memoria sin control (dep: T014)
-- [ ] T053 [US1] Implementar `src/CBL.Application/Auth/Login/LoginHandler.cs`: buscar al usuario por correo normalizado (minúsculas); mismo 401 genérico para correo inexistente, contraseña incorrecta y usuario desactivado; contar el fallo también para correos inexistentes; lanzar `AccountLockedException` al bloquear (dep: T049, T050, T051, T052)
-- [ ] T054 [US1] Crear `src/CBL.Api/Endpoints/AuthEndpoints.cs` con `POST /api/auth/login` (`[AllowAnonymous]`, política de tasa `login`, respuestas 200/400/401/422/423/429 según el contrato) (dep: T053, T039)
-- [ ] T055 [US1] Registrar los servicios de la historia en `src/CBL.Application/DependencyInjection.cs` y `src/CBL.Infrastructure/DependencyInjection.cs` y comprobar T044–T048 en verde (dep: T054)
+- [x] T049 [P] [US1] Crear `LoginRequest`, `LoginResponse` y su validador en `src/CBL.Application/Auth/Login/` (correo `maxLength 256`, contraseña `maxLength 200`)
+- [x] T050 [P] [US1] Implementar `src/CBL.Infrastructure/Security/PasswordHasherAdapter.cs` sobre `PasswordHasher<User>` (PBKDF2) con comparación segura
+- [x] T051 [P] [US1] Implementar `src/CBL.Infrastructure/Security/JwtTokenService.cs` (HS256, 10 minutos, claims `sub`, `email`, `role`, `jti`) (dep: T037)
+- [x] T052 [P] [US1] Implementar `src/CBL.Infrastructure/Security/LoginAttemptTracker.cs` en memoria sobre `IMemoryCache` por correo normalizado, con `Auth:MaxFailedAttempts` y `Auth:LockoutMinutes` validados al arrancar; las entradas caducan al terminar la ventana de 15 minutos y el almacén tiene límite de tamaño, para que correos arbitrarios no hagan crecer la memoria sin control (dep: T014)
+- [x] T053 [US1] Implementar `src/CBL.Application/Auth/Login/LoginHandler.cs`: buscar al usuario por correo normalizado (minúsculas); mismo 401 genérico para correo inexistente, contraseña incorrecta y usuario desactivado; contar el fallo también para correos inexistentes; lanzar `AccountLockedException` al bloquear (dep: T049, T050, T051, T052)
+- [x] T054 [US1] Crear `src/CBL.Api/Endpoints/AuthEndpoints.cs` con `POST /api/auth/login` (`[AllowAnonymous]`, política de tasa `login`, respuestas 200/400/401/422/423/429 según el contrato) (dep: T053, T039)
+- [x] T055 [US1] Registrar los servicios de la historia en `src/CBL.Application/DependencyInjection.cs` y `src/CBL.Infrastructure/DependencyInjection.cs` y comprobar T044–T048 en verde (dep: T054)
 
 **Punto de control**: la historia 1 es funcional y probable por sí sola.
 
