@@ -61,7 +61,8 @@ Entrega
 - What I changed by hand and why / Qué cambié a mano y por qué: nada en el contenido; solo se eliminó el informe de impacto temporal (comentario HTML) antes del commit, como indica la skill. Aprobada por el usuario. / Nothing in the content; only the temporary sync-impact HTML comment was removed before the commit, as the skill instructs. Approved by the user.
 
 ## Phase 2 – /speckit.specify / Fase 2 – /speckit.specify
-- Date / Fecha:
+- Agent / Agente: Claude Code (`/speckit-specify`). Rama `001-gestion-prestamos` creada a mano porque no hay extensión de git instalada (sin hook `before_specify`). / Branch `001-gestion-prestamos` created by hand because no git extension is installed (no `before_specify` hook).
+- Date / Fecha: 2026-11-11
 - Prompt used / Prompt usado:
 
 ```
@@ -120,25 +121,62 @@ Fuera de alcance
 - Cálculo de intereses, cuotas, desembolsos y pagos.
 - Registro público de usuarios, recuperación de contraseña y notificaciones por correo.
 ```
-- What it generated / Qué generó:
-- What I changed by hand and why / Qué cambié a mano y por qué:
+- What it generated / Qué generó: `specs/001-gestion-prestamos/spec.md` (8 historias de usuario: 5 P1 y 3 P2; 30 requisitos funcionales; 10 criterios de éxito; casos límite, supuestos y fuera de alcance; 0 marcadores de aclaración), `specs/001-gestion-prestamos/checklists/requirements.md` (validado, 1 iteración) y `.specify/feature.json`. Encabezados traducidos al español; IDs `FR-###`/`SC-###` conservados. Supuestos añadidos por el agente para confirmar en la Fase 3: un admin no desactiva su propia cuenta; la desactivación surte efecto a más tardar al expirar la sesión; correo sin distinguir mayúsculas; los límites nuevos no afectan solicitudes ya registradas.
+- What I changed by hand and why / Qué cambié a mano y por qué: nada; aprobada por el usuario tal como se generó. Antes de la aprobación el agente retiró "tabla de límites" del FR-023 por ser un detalle de implementación. / Nothing; approved by the user as generated. Before approval the agent removed "tabla de límites" from FR-023 as an implementation detail.
 
 ## Phase 3 – /speckit.clarify / Fase 3 – /speckit.clarify
-- Date / Fecha:
-- Questions it asked and my answers / Preguntas que hizo y mis respuestas:
+- Agent / Agente: Claude Code (`/speckit-clarify`). Rama `001-gestion-prestamos`.
+- Date / Fecha: 2026-11-11
+- Questions it asked and my answers / Preguntas que hizo y mis respuestas: no existe en el repo una lista de "10 preguntas"; el agente hizo el barrido de ambigüedades y resolvió 8 puntos (límite de la skill: 5 preguntas al usuario). Quedaron registrados en `## Clarifications` de `spec.md`. / There is no list of "10 questions" in the repo; the agent scanned for ambiguities and resolved 8 points (skill cap: 5 questions to the user). Recorded in `## Clarifications` of `spec.md`.
+  - Respondidas por el usuario (3, opción recomendada en las tres) / Answered by the user (3, recommended option each): (1) un admin NO puede desactivar su propia cuenta; (2) un usuario desactivado pierde el acceso al expirar su sesión (máx. 10 min); (3) el bloqueo de login se cuenta por correo, exista o no.
+  - Resueltas desde ADR, sin preguntar (5) / Resolved from ADRs, not asked (5): límites nuevos solo afectan solicitudes nuevas (ADR-0008); desactivación lógica, nunca se elimina a usuarios con préstamos (ADR-0017); USD con formato `en-US`, interfaz en español, lista del admin con filtro por estado y sin paginación (ADR-0025). ADR-0023 ya estaba reflejado en la Fase 2.
+  - Supuestos por defecto NO confirmados / Unconfirmed default assumptions: correo sin distinguir mayúsculas; al editar un préstamo Pendiente se cambian monto y plazo, revalidados con los límites vigentes.
+- Spec changes / Cambios en el spec: FR-003, 013, 020, 022, 024 ajustados; FR-031 y SC-011 añadidos; escenarios y casos límite nuevos; 31 FR y 11 SC en total; checklist sin regresiones (15/15) y 0 marcadores. / FR-003, 013, 020, 022, 024 adjusted; FR-031 and SC-011 added; new scenarios and edge cases; 31 FR and 11 SC total; checklist with no regressions (15/15) and 0 markers.
+- What I changed by hand and why / Qué cambié a mano y por qué: nada; aprobada por el usuario tal como se generó. / Nothing; approved by the user as generated.
 
 ## Phase 4 – /speckit.plan / Fase 4 – /speckit.plan
-- Date / Fecha:
+- Agent / Agente: Claude Code (`/speckit-plan`). Rama `001-gestion-prestamos`.
+- Date / Fecha: 2026-11-11
 - Prompt used / Prompt usado: (paste; it pins .NET 8, EF Core + InMemory, `.sqlproj`, FluentValidation, xUnit, `WebApplicationFactory`, SQL Server service container in CI with `SqlPackage`, no Testcontainers, CI and release workflows / pegar; aquí se fija .NET 8, EF Core + InMemory, `.sqlproj`, FluentValidation, xUnit, `WebApplicationFactory`, contenedor de servicio de SQL Server en CI con `SqlPackage`, sin Testcontainers, workflows de CI y release)
-- What I changed by hand and why / Qué cambié a mano y por qué:
+- Prompt applied / Prompt aplicado (resumen): "Fija el stack: .NET 8, EF Core + InMemory, `.sqlproj`, FluentValidation, xUnit y `WebApplicationFactory`; SQL Server como contenedor de servicio en CI con `SqlPackage`, sin Testcontainers; workflows de CI y de release. Usa `docs/planning/tasks-backend.md` como borrador." (Se aplicó el contenido del prompt descrito arriba; no había un texto literal en el log.) / (The content described above was applied; there was no literal text in the log.)
+- What it generated / Qué generó: `specs/001-gestion-prestamos/plan.md` (contexto técnico, verificación de la constitución sin violaciones, estructura de código, tabla de desviaciones D1–D8), `research.md` (16 decisiones), `data-model.md` (4 tablas, transiciones, validaciones), `contracts/openapi.yaml` (18 operaciones, YAML válido, referencias resueltas) y `quickstart.md` (20 escenarios).
+- Deviations from `docs/planning/tasks-backend.md` / Desviaciones del borrador: nombres `CBL.*`; `GET /api/loans` sin paginación; se omiten `GET /api/auth/me`, `GET /api/loans/{id}/audit` y `DELETE /api/users/{id}` (fuera del spec); bloqueo de login por correo en memoria; auto-baja de admin → 403; cuerpo opcional `version` al decidir; **nuevo `POST /api/auth/logout`** con revocación de `jti` en memoria (FR-004; no está en el contrato asumido por el frontend). / `CBL.*` names; no paging; endpoints outside the spec dropped; in-memory lockout per email; admin self-deactivation → 403; optional `version` on decisions; **new `POST /api/auth/logout`** with in-memory `jti` revocation (FR-004; not in the contract the frontend assumed).
+- Pending for the frontend / Pendiente para el frontend: llamar a `POST /api/auth/logout` al cerrar sesión y conciliar con este `openapi.yaml` (FE-74). / Call `POST /api/auth/logout` on sign-out and reconcile with this `openapi.yaml` (FE-74).
+- Environment note / Nota de entorno: la máquina solo tiene SDK de .NET 6 y 9; `global.json` exigirá el 8 antes de implementar. / The machine only has .NET SDK 6 and 9; `global.json` will require 8 before implementation.
+- What I changed by hand and why / Qué cambié a mano y por qué: nada; aprobada por el usuario tal como se generó, incluido el endpoint de logout. / Nothing; approved by the user as generated, including the logout endpoint.
 
 ## Phase 5 – /speckit.tasks / Fase 5 – /speckit.tasks
-- Date / Fecha:
-- What I changed by hand and why / Qué cambié a mano y por qué:
+- Agent / Agente: Claude Code (`/speckit-tasks`). Rama `001-gestion-prestamos`.
+- Date / Fecha: 2026-11-11
+- Prompt applied / Prompt aplicado: "Usa `docs/planning/tasks-backend.md` como base" (ajustado al plan: nombres `CBL.*`, sin paginación, con logout y desviaciones D1–D8). / "Use `docs/planning/tasks-backend.md` as the base" (adjusted to the plan).
+- What it generated / Qué generó: `specs/001-gestion-prestamos/tasks.md` con 112 tareas (72 `[P]`): Preparación 7, Fundamentos 36, US1 12, US2 9, US3 8, US4 4, US5 8, US6 7, US7 5, US8 5, Pulido 11. Incluye tareas de prueba (la constitución las exige), rutas exactas y restricciones del modelo de datos citadas literalmente. Validado con un script: formato, IDs secuenciales, etiquetas por historia y dependencias sin referencias hacia adelante; 8 tareas sin ruta se corrigieron antes de la aprobación.
+- MVP cut / Corte de MVP: US1–US5 más T102 (coincidencia EF ↔ esquema), T104 (`ci.yml`) y T108 (README). Recorte si falta tiempo: T107 → T105 → T109 → US8 → US7 → US6.
+- Additions beyond the draft / Añadidos respecto al borrador: T109 (ADR-0026: bloqueo y revocación en memoria), T022 (hash de `123` con consola desechable fuera del repo), T001 (instalar SDK .NET 8).
+- What I changed by hand and why / Qué cambié a mano y por qué: nada; aprobada por el usuario tal como se generó. / Nothing; approved by the user as generated.
 
 ## Phase 6 – /speckit.analyze / Fase 6 – /speckit.analyze
-- Date / Fecha:
-- Result (pasted) / Resultado (pegado):
+- Agent / Agente: Claude Code (`/speckit-analyze`, solo lectura). Rama `001-gestion-prestamos`.
+- Date / Fecha: 2026-11-11
+- Result (pasted) / Resultado (pegado): 18 hallazgos (1 crítico, 2 altos, 6 medios, 9 bajos). Cobertura: 100 % de los 25 FR de backend; 80,6 % de los 31 FR totales (FR-026 a FR-031 son de interfaz y los implementa el frontend). 9 de 10 SC verificables con tarea (SC-001 es de experiencia de usuario y se excluye). Total: 31 FR + 11 SC, 112 tareas en el momento del análisis.
+
+| ID | Sev. | Resumen | Resolución |
+|---|---|---|---|
+| C1 | CRÍTICA | `/health` anónimo contradice "endpoints privados salvo el login" (constitución, principio III) | Se quitó `/health` de research, T039 y openapi (17 operaciones); no se enmendó la constitución |
+| I1 | ALTA | Límite de tasa de `login` vs bloqueo: T048 exigía 423 y 429 a la vez, sin valores | Defaults 100/min global y 20/min en `login` (`RateLimiting:*`); T048 dividida en dos pruebas |
+| U1 | ALTA | Un admin podía cambiarse su propio rol y dejar el sistema sin admins | FR-020, escenario, caso límite, SC-011, data-model, contrato, quickstart, T085 y T087 ampliados (extensión de la aclaración 1, confirmada por el usuario al aprobar) |
+| I2 | MEDIA | Las historias no eran independientes: T041 y T051 dependen de US1 | Dependencia documentada; el orden de MVP US1 → US5 es obligatorio |
+| G1 | MEDIA | SC-006 (p95 < 1 s) sin tarea de verificación | Nueva T112 (`StatusQueryPerformanceTests`); la ejecución final pasó a T113; FR-019 remite a SC-006 |
+| G2 | MEDIA | FR-026 a FR-031 sin tareas ni marca de alcance | Nota en `spec.md`: los implementa `cbl-frontend` |
+| U2 | MEDIA | Faltaban tipos del modelo en T018–T020 | Citados literalmente (`nvarchar(20)`, `datetime2(0)`) |
+| U3 | MEDIA | Normalización de correo en el login no explícita | T053 y T044 |
+| U4 | MEDIA | Contador de bloqueo sin caducidad ni límite de tamaño | T052 |
+| U5, I3, I4, A1, I5, I6, U6 | BAJA | Reactivación de usuarios; "Endpoints\|Controllers"; `.dacpac` solo en `main`; "rápido" sin métrica; 409 sin `errors.email`; `GET /api/loans/{id}` sin FR; riesgo de bloqueo por correo sin documentar | Aplicadas (spec, plan, research, openapi, T104, T109) |
+| I7 | BAJA | El frontend no tiene tarea para llamar a `POST /api/auth/logout`; numeración de ADR compartida (0026) | Pendiente: se atiende en el repo del frontend (no se tocó) |
+| D1 | BAJA | "Los límites nuevos no afectan lo registrado" repetido en 4 sitios del spec | Sin cambio |
+
+- Corrections applied / Correcciones aplicadas: todas, salvo I7 (frontend) y D1; en `spec.md`, `plan.md`, `research.md`, `data-model.md`, `contracts/openapi.yaml`, `quickstart.md` y `tasks.md` (113 tareas, 73 `[P]`; formato, IDs y dependencias revalidados con un script; el YAML del contrato parsea y no tiene referencias rotas). / All applied except I7 (frontend) and D1.
+- Pending for the frontend / Pendiente para el frontend: tarea de llamar a `POST /api/auth/logout`; conciliar con el `openapi.yaml` (FE-74); coordinar la numeración de ADR (0026 lo toma el backend, T109).
+- What I changed by hand and why / Qué cambié a mano y por qué: nada; las correcciones las aplicó el agente y las aprobó el usuario. / Nothing; corrections were applied by the agent and approved by the user.
 
 ## Phase 7 – /speckit.implement / Fase 7 – /speckit.implement
 - Date / Fecha:
