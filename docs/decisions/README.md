@@ -30,6 +30,7 @@
 | [0023](0023-backend-business-rule-defaults.md) | Backend business-rule defaults | Valores por defecto de reglas de negocio del backend |
 | [0024](0024-cd-publishes-artifacts-only.md) | CD publishes artifacts only | El CD solo publica artefactos |
 | 0025 | Frontend UI defaults (see frontend repo) | Valores por defecto de la UI del frontend (ver repo frontend) |
+| [0026](0026-in-memory-lockout-and-token-revocation.md) | Login lockout and token revocation kept in process memory | Bloqueo de login y revocación de tokens en memoria del proceso |
 
 🇬🇧 If you change a decision, do not edit the original ADR: create a new one and mark the old one as "Superseded by ADR-00XX".
 🇪🇸 Si cambias una decisión, no edites el ADR original: crea uno nuevo y marca el anterior como "Reemplazada por ADR-00XX".

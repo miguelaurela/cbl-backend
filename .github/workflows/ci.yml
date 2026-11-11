@@ -90,6 +90,8 @@ jobs:
       - name: Pruebas de integración (SQL Server real)
         env:
           CBL_TEST_SQL: ${{ env.CI_SQL_CONNECTION }}
+          # Las pruebas del contrato exportan el OpenAPI que genera la API; se publica como artefacto (T107).
+          CBL_OPENAPI_OUT: ${{ github.workspace }}/TestResults/openapi.generated.json
         run: dotnet test tests/CBL.IntegrationTests -c Release --no-build --logger "trx;LogFileName=integration.trx" --results-directory TestResults
 
       - name: Comprobar que ninguna prueba de integración se omitió

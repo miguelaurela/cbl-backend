@@ -1,0 +1,58 @@
+name: Release
+
+# CD = SOLO publicar artefactos (ADR-0024). Un tag v*.*.* reconstruye, ejecuta las pruebas unitarias y crea un GitHub
+# Release con el .dacpac, el zip de publicación de la API y SHA256SUMS.txt. Solo usa GITHUB_TOKEN; no hay despliegue en
+# la nube. Las pruebas de integración ya corrieron en el CI de la confirmación etiquetada.
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restaurar y compilar (incluye el .sqlproj → .dacpac)
+        run: |
+          dotnet restore CBL.sln
+          dotnet build CBL.sln -c Release --no-restore
+
+      - name: Pruebas unitarias
+        run: dotnet test tests/CBL.UnitTests -c Release --no-build
+
+      - name: Empaquetar los artefactos
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          mkdir -p artifacts publish
+
+          dotnet publish src/CBL.Api/CBL.Api.csproj -c Release --no-build -o publish
+          (cd publish && zip -r -q "../artifacts/cbl-api-${TAG}.zip" .)
+          cp db/CBL.Database/bin/Release/CBL.Database.dacpac "artifacts/CBL.Database-${TAG}.dacpac"
+
+          (cd artifacts && sha256sum * > SHA256SUMS.txt)
+          cat artifacts/SHA256SUMS.txt
+
+      - name: Crear el GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" artifacts/* \
+            --title "CBL Backend ${GITHUB_REF_NAME}" \
+            --generate-notes

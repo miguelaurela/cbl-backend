@@ -12,7 +12,10 @@ public static class ApiServiceExtensions
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<ICorrelationIdAccessor, HttpCorrelationIdAccessor>();
 
-        services.AddProblemDetails();
+        // Todo ProblemDetails (excepciones, 401/403/404 sin cuerpo, 413, 429) lleva el correlation ID como traceId.
+        services.AddProblemDetails(options =>
+            options.CustomizeProblemDetails = context =>
+                context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier);
         services.AddExceptionHandler<ApiExceptionHandler>();
 
         services.AddCblJson();
