@@ -146,8 +146,13 @@ Fuera de alcance
 - What I changed by hand and why / Qué cambié a mano y por qué: nada; aprobada por el usuario tal como se generó, incluido el endpoint de logout. / Nothing; approved by the user as generated, including the logout endpoint.
 
 ## Phase 5 – /speckit.tasks / Fase 5 – /speckit.tasks
-- Date / Fecha:
-- What I changed by hand and why / Qué cambié a mano y por qué:
+- Agent / Agente: Claude Code (`/speckit-tasks`). Rama `001-gestion-prestamos`.
+- Date / Fecha: 2026-11-11
+- Prompt applied / Prompt aplicado: "Usa `docs/planning/tasks-backend.md` como base" (ajustado al plan: nombres `CBL.*`, sin paginación, con logout y desviaciones D1–D8). / "Use `docs/planning/tasks-backend.md` as the base" (adjusted to the plan).
+- What it generated / Qué generó: `specs/001-gestion-prestamos/tasks.md` con 112 tareas (72 `[P]`): Preparación 7, Fundamentos 36, US1 12, US2 9, US3 8, US4 4, US5 8, US6 7, US7 5, US8 5, Pulido 11. Incluye tareas de prueba (la constitución las exige), rutas exactas y restricciones del modelo de datos citadas literalmente. Validado con un script: formato, IDs secuenciales, etiquetas por historia y dependencias sin referencias hacia adelante; 8 tareas sin ruta se corrigieron antes de la aprobación.
+- MVP cut / Corte de MVP: US1–US5 más T102 (coincidencia EF ↔ esquema), T104 (`ci.yml`) y T108 (README). Recorte si falta tiempo: T107 → T105 → T109 → US8 → US7 → US6.
+- Additions beyond the draft / Añadidos respecto al borrador: T109 (ADR-0026: bloqueo y revocación en memoria), T022 (hash de `123` con consola desechable fuera del repo), T001 (instalar SDK .NET 8).
+- What I changed by hand and why / Qué cambié a mano y por qué: nada; aprobada por el usuario tal como se generó. / Nothing; approved by the user as generated.
 
 ## Phase 6 – /speckit.analyze / Fase 6 – /speckit.analyze
 - Date / Fecha:
