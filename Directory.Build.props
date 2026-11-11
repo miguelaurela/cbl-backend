@@ -6,7 +6,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- No activar InvariantGlobalization: Microsoft.Data.SqlClient no lo soporta y la API no podría conectar a SQL Server.
+         El formato de números y fechas usa InvariantCulture de forma explícita. -->
   </PropertyGroup>
 
 </Project>
