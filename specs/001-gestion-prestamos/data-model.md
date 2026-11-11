@@ -18,7 +18,7 @@ El esquema SQL de `db/CBL.Database` es la fuente de verdad; `OnModelCreating` lo
 | `IsActive` | `bit` | Por defecto `1`. La desactivación es lógica; nunca se elimina a un usuario con historial. |
 | `CreatedAt` | `datetime2(0)` | UTC. |
 
-Reglas: contraseña ≥ 8 caracteres al crear o restablecer por la API (el seed no pasa por la API). Un admin no puede dejar `IsActive = false` en su propia cuenta (403). El contador de intentos fallidos de login **no** se guarda aquí (ver plan, D4).
+Reglas: contraseña ≥ 8 caracteres al crear o restablecer por la API (el seed no pasa por la API). Un admin no puede dejar `IsActive = false` en su propia cuenta ni cambiarse su propio `Role` (403); sí puede reactivar a otros usuarios. El contador de intentos fallidos de login **no** se guarda aquí (ver plan, D4).
 
 ### Loan (`Loans`)
 
@@ -109,7 +109,7 @@ SystemParameter             (independiente; clave-valor)
 | Editar/eliminar propio solo si `Pending`; Admin elimina solo `Pending` | FR-012 | Dominio (`Loan`) y caso de uso (dueño/rol) |
 | Decidir solo si `Pending`; decisión final | FR-014, FR-015 | Dominio (`Loan.Approve/Reject`) |
 | Contraseña ≥ 8 y correo único | FR-021 | Validador y restricción `UNIQUE` |
-| Un admin no se desactiva a sí mismo | FR-020 | Caso de uso `UpdateUser` |
+| Un admin no se desactiva ni se cambia el rol a sí mismo | FR-020 | Caso de uso `UpdateUser` |
 | Límites: mínimo > 0 y máximo > mínimo | FR-024 | Validador de `UpdateLoanLimits` |
 
 ## Nota de mapeo EF

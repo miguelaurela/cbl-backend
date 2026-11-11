@@ -7,7 +7,7 @@ info:
     se generará desde el código, solo en Development).
     Convenciones: prefijo `/api`, JSON camelCase, fechas ISO 8601 UTC, importes como número con 2 decimales,
     enumeraciones como cadenas, ids GUID tratados como cadenas opacas.
-    Todo endpoint exige `Authorization: Bearer <jwt>` (vida de 10 minutos, sin refresh) salvo el login y `/health`.
+    Todo endpoint exige `Authorization: Bearer <jwt>` (vida de 10 minutos, sin refresh) salvo el login.
     Todo error no 2xx usa `application/problem+json` (RFC 7807).
 servers:
   - url: http://localhost:5000
@@ -17,7 +17,6 @@ tags:
   - name: Loans
   - name: Users
   - name: Parameters
-  - name: Health
 security:
   - bearerAuth: []
 paths:
@@ -269,7 +268,11 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
-        '409': { $ref: '#/components/responses/Conflict' }
+        '409':
+          description: Correo ya existente; el cuerpo incluye `errors.email` con el mensaje.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
         '429': { $ref: '#/components/responses/TooManyRequests' }
   /api/users/{id}:
@@ -296,7 +299,8 @@ paths:
       summary: Actualizar o desactivar un usuario (solo Admin; FR-020, FR-022)
       description: |
         La desactivación es lógica (`isActive=false`); un usuario con préstamos nunca se elimina.
-        Un admin que intenta desactivar su propia cuenta recibe 403.
+        Un admin que intenta desactivar su propia cuenta o cambiarse su propio rol recibe 403.
+        Un admin puede reactivar a otros usuarios (`isActive=true`).
         Un usuario desactivado con sesión vigente pierde el acceso al expirar su token (máx. 10 minutos).
       requestBody:
         required: true
@@ -348,14 +352,6 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
         '429': { $ref: '#/components/responses/TooManyRequests' }
-  /health:
-    get:
-      tags: [Health]
-      summary: Comprobación de vida
-      security: []
-      responses:
-        '200':
-          description: El servicio responde.
 components:
   securitySchemes:
     bearerAuth:

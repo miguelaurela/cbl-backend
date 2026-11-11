@@ -55,7 +55,7 @@ Todas las incógnitas del contexto técnico quedan resueltas aquí. Las decision
 
 ## R8. Autorización
 
-- **Decisión**: policies `AdminOnly` y `BorrowerOnly`, más política de respaldo "usuario autenticado" (todo endpoint es privado salvo `POST /api/auth/login` y `/health`, marcados `[AllowAnonymous]`). El id del usuario sale siempre de `ICurrentUser` (claims); ningún DTO de entrada lleva un id de propietario. Para recursos de otro usuario se responde 404 y no 403, para no permitir enumeración.
+- **Decisión**: policies `AdminOnly` y `BorrowerOnly`, más política de respaldo "usuario autenticado" (todo endpoint es privado salvo `POST /api/auth/login`, marcado `[AllowAnonymous]`). El id del usuario sale siempre de `ICurrentUser` (claims); ningún DTO de entrada lleva un id de propietario. Para recursos de otro usuario se responde 404 y no 403, para no permitir enumeración.
 - **Razón**: constitución (III), FR-005, FR-011, SC-002.
 
 ## R9. Contraseñas
@@ -65,7 +65,7 @@ Todas las incógnitas del contexto técnico quedan resueltas aquí. Las decision
 
 ## R10. Pipeline de middleware
 
-- **Decisión** (orden exacto): manejo global de excepciones (`IExceptionHandler` + `ProblemDetails`) → HTTPS/HSTS (fuera de Development) → cabeceras de seguridad (`nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, CSP restrictiva, `Cache-Control: no-store`) → CORS con origen del frontend desde `Cors:AllowedOrigins` (sin `AllowAnyOrigin`, métodos y cabeceras explícitos, incluida `Authorization`) → rate limiting (global por IP y política más estricta `login`, 429 con `Retry-After`) → correlation ID (`X-Correlation-Id`, en el ámbito de logs y como `traceId`) y logging sin cuerpos, contraseñas ni tokens → autenticación → autorización → endpoints. Límite de tamaño de cuerpo (64 KB).
+- **Decisión** (orden exacto): manejo global de excepciones (`IExceptionHandler` + `ProblemDetails`) → HTTPS/HSTS (fuera de Development) → cabeceras de seguridad (`nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, CSP restrictiva, `Cache-Control: no-store`) → CORS con origen del frontend desde `Cors:AllowedOrigins` (sin `AllowAnyOrigin`, métodos y cabeceras explícitos, incluida `Authorization`) → rate limiting (global por IP, 100 solicitudes/min por defecto, y política más estricta `login`, 20/min por IP por defecto, ambos configurables en `RateLimiting:*`; 429 con `Retry-After`; el límite de `login` debe quedar por encima de los 5 intentos del bloqueo para que este último sea alcanzable) → correlation ID (`X-Correlation-Id`, en el ámbito de logs y como `traceId`) y logging sin cuerpos, contraseñas ni tokens → autenticación → autorización → endpoints. Límite de tamaño de cuerpo (64 KB).
 - **Razón**: ADR-0010 y `docs/00-analysis.md` §7; constitución (III).
 - **Nota**: el límite de tasa por IP y el bloqueo por correo son mecanismos distintos; las pruebas (R14) cubren ambos.
 
@@ -83,7 +83,7 @@ Todas las incógnitas del contexto técnico quedan resueltas aquí. Las decision
 
 ## R13. Consultas y reglas de listado
 
-- **Decisión**: `GET /api/loans` (solo Admin) devuelve todos los préstamos con filtro opcional `status`, ordenados del más reciente al más antiguo y **sin paginación** (FR-013). `GET /api/loans/mine` devuelve solo los del Borrower. Edición (`PUT`) y borrado (`DELETE`) solo sobre préstamos Pendientes, con las reglas por rol de FR-012; al editar se revalidan monto y plazo con los límites vigentes (supuesto por defecto del spec).
+- **Decisión**: `GET /api/loans` (solo Admin) devuelve todos los préstamos con filtro opcional `status`, ordenados del más reciente al más antiguo y **sin paginación** (FR-013). `GET /api/loans/mine` devuelve solo los del Borrower. `GET /api/loans/{id}` respalda FR-011 y FR-013 (detalle del propio préstamo, o de cualquiera para el Admin). Edición (`PUT`) y borrado (`DELETE`) solo sobre préstamos Pendientes, con las reglas por rol de FR-012; al editar se revalidan monto y plazo con los límites vigentes (supuesto por defecto del spec).
 - **Razón**: FR-011–013, ADR-0023/0025. Se descartó paginar porque el volumen es pequeño y el frontend no la usa.
 
 ## R14. Estrategia de pruebas

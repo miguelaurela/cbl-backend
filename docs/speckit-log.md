@@ -155,8 +155,28 @@ Fuera de alcance
 - What I changed by hand and why / Qué cambié a mano y por qué: nada; aprobada por el usuario tal como se generó. / Nothing; approved by the user as generated.
 
 ## Phase 6 – /speckit.analyze / Fase 6 – /speckit.analyze
-- Date / Fecha:
-- Result (pasted) / Resultado (pegado):
+- Agent / Agente: Claude Code (`/speckit-analyze`, solo lectura). Rama `001-gestion-prestamos`.
+- Date / Fecha: 2026-11-11
+- Result (pasted) / Resultado (pegado): 18 hallazgos (1 crítico, 2 altos, 6 medios, 9 bajos). Cobertura: 100 % de los 25 FR de backend; 80,6 % de los 31 FR totales (FR-026 a FR-031 son de interfaz y los implementa el frontend). 9 de 10 SC verificables con tarea (SC-001 es de experiencia de usuario y se excluye). Total: 31 FR + 11 SC, 112 tareas en el momento del análisis.
+
+| ID | Sev. | Resumen | Resolución |
+|---|---|---|---|
+| C1 | CRÍTICA | `/health` anónimo contradice "endpoints privados salvo el login" (constitución, principio III) | Se quitó `/health` de research, T039 y openapi (17 operaciones); no se enmendó la constitución |
+| I1 | ALTA | Límite de tasa de `login` vs bloqueo: T048 exigía 423 y 429 a la vez, sin valores | Defaults 100/min global y 20/min en `login` (`RateLimiting:*`); T048 dividida en dos pruebas |
+| U1 | ALTA | Un admin podía cambiarse su propio rol y dejar el sistema sin admins | FR-020, escenario, caso límite, SC-011, data-model, contrato, quickstart, T085 y T087 ampliados (extensión de la aclaración 1, confirmada por el usuario al aprobar) |
+| I2 | MEDIA | Las historias no eran independientes: T041 y T051 dependen de US1 | Dependencia documentada; el orden de MVP US1 → US5 es obligatorio |
+| G1 | MEDIA | SC-006 (p95 < 1 s) sin tarea de verificación | Nueva T112 (`StatusQueryPerformanceTests`); la ejecución final pasó a T113; FR-019 remite a SC-006 |
+| G2 | MEDIA | FR-026 a FR-031 sin tareas ni marca de alcance | Nota en `spec.md`: los implementa `cbl-frontend` |
+| U2 | MEDIA | Faltaban tipos del modelo en T018–T020 | Citados literalmente (`nvarchar(20)`, `datetime2(0)`) |
+| U3 | MEDIA | Normalización de correo en el login no explícita | T053 y T044 |
+| U4 | MEDIA | Contador de bloqueo sin caducidad ni límite de tamaño | T052 |
+| U5, I3, I4, A1, I5, I6, U6 | BAJA | Reactivación de usuarios; "Endpoints\|Controllers"; `.dacpac` solo en `main`; "rápido" sin métrica; 409 sin `errors.email`; `GET /api/loans/{id}` sin FR; riesgo de bloqueo por correo sin documentar | Aplicadas (spec, plan, research, openapi, T104, T109) |
+| I7 | BAJA | El frontend no tiene tarea para llamar a `POST /api/auth/logout`; numeración de ADR compartida (0026) | Pendiente: se atiende en el repo del frontend (no se tocó) |
+| D1 | BAJA | "Los límites nuevos no afectan lo registrado" repetido en 4 sitios del spec | Sin cambio |
+
+- Corrections applied / Correcciones aplicadas: todas, salvo I7 (frontend) y D1; en `spec.md`, `plan.md`, `research.md`, `data-model.md`, `contracts/openapi.yaml`, `quickstart.md` y `tasks.md` (113 tareas, 73 `[P]`; formato, IDs y dependencias revalidados con un script; el YAML del contrato parsea y no tiene referencias rotas). / All applied except I7 (frontend) and D1.
+- Pending for the frontend / Pendiente para el frontend: tarea de llamar a `POST /api/auth/logout`; conciliar con el `openapi.yaml` (FE-74); coordinar la numeración de ADR (0026 lo toma el backend, T109).
+- What I changed by hand and why / Qué cambié a mano y por qué: nada; las correcciones las aplicó el agente y las aprobó el usuario. / Nothing; corrections were applied by the agent and approved by the user.
 
 ## Phase 7 – /speckit.implement / Fase 7 – /speckit.implement
 - Date / Fecha:

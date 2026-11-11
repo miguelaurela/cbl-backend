@@ -135,7 +135,7 @@ Como administrador, quiero gestionar usuarios (crear, consultar, actualizar, des
 2. **Dado** una contraseña de menos de 8 caracteres o un correo ya existente, **cuando** el administrador intenta crear el usuario, **entonces** se rechaza con un mensaje claro por campo.
 3. **Dado** un usuario desactivado, **cuando** intenta iniciar sesión, **entonces** no obtiene acceso.
 4. **Dado** un prestamista, **cuando** intenta acceder a la gestión de usuarios, **entonces** se le deniega el acceso.
-5. **Dado** un administrador, **cuando** intenta desactivar su propia cuenta, **entonces** el sistema lo rechaza con un mensaje claro y la cuenta sigue activa.
+5. **Dado** un administrador, **cuando** intenta desactivar su propia cuenta o cambiarse su propio rol, **entonces** el sistema lo rechaza con un mensaje claro y la cuenta conserva su estado y su rol.
 6. **Dado** un usuario con préstamos, **cuando** un administrador lo desactiva, **entonces** el usuario queda desactivado y sus préstamos y decisiones se conservan; nunca se elimina.
 
 ---
@@ -180,7 +180,7 @@ Como prestamista o administrador, quiero cerrar sesión de forma segura.
 - Se modifican los límites mientras hay solicitudes Pendientes: las ya registradas conservan su monto; los nuevos valores solo se aplican a solicitudes nuevas.
 - Límites inválidos al modificarlos (mínimo menor o igual que 0, o mínimo mayor que el máximo): se rechaza con mensaje claro.
 - Un usuario es desactivado mientras tiene una sesión vigente: el acceso se pierde a más tardar al expirar la sesión (máximo 10 minutos).
-- Un administrador intenta desactivar su propia cuenta: se rechaza.
+- Un administrador intenta desactivar su propia cuenta o cambiarse su propio rol: se rechaza.
 - Se acumulan 5 fallos de inicio de sesión con un correo que no existe: se bloquea igual que con uno existente, para no revelar su existencia.
 - Se consulta repetidamente el estado de los préstamos sin cambios: el resultado es el mismo y rápido; tras una decisión, la siguiente consulta refleja el cambio.
 - Un correo se escribe con distinta capitalización al crear un usuario o iniciar sesión: se trata como el mismo correo.
@@ -215,11 +215,11 @@ Como prestamista o administrador, quiero cerrar sesión de forma segura.
 - **FR-016**: Cada decisión MUST registrar quién la tomó y cuándo.
 - **FR-017**: Si dos administradores deciden a la vez sobre el mismo préstamo, solo una decisión MUST prevalecer y la otra MUST recibir un conflicto claro.
 - **FR-018**: Tras aprobar o rechazar, el prestamista MUST ver el nuevo estado sin información desactualizada.
-- **FR-019**: Consultar repetidamente el estado de los préstamos MUST ser rápido, y el resultado MUST reflejar siempre el último cambio.
+- **FR-019**: Consultar repetidamente el estado de los préstamos MUST ser rápido (véase SC-006), y el resultado MUST reflejar siempre el último cambio.
 
 **Usuarios**
 
-- **FR-020**: Un Admin MUST poder crear, consultar, actualizar y desactivar usuarios. No existe registro público. Un Admin MUST NOT poder desactivar su propia cuenta.
+- **FR-020**: Un Admin MUST poder crear, consultar, actualizar y desactivar usuarios. No existe registro público. Un Admin MUST NOT poder desactivar su propia cuenta ni cambiarse su propio rol, para no dejar el sistema sin administradores. Un Admin MAY reactivar a un usuario desactivado.
 - **FR-021**: Los usuarios creados por un Admin MUST tener una contraseña de al menos 8 caracteres; el correo MUST ser único.
 - **FR-022**: Un usuario desactivado MUST NOT poder iniciar sesión. La desactivación es lógica: un usuario con préstamos MUST NOT eliminarse y su historial se conserva. Si tenía una sesión vigente, pierde el acceso a más tardar al expirar esa sesión.
 
@@ -233,6 +233,8 @@ Como prestamista o administrador, quiero cerrar sesión de forma segura.
 - **FR-025**: El sistema MUST incluir como datos iniciales un prestamista (`usuario@test.com` / `123`, contraseña solo de ejemplo), un administrador (`admin@test.com` / `123`) y los límites por defecto (mínimo 1.000, máximo 100.000).
 
 **Interfaz (referencia: 3 pantallas principales, más gestión de usuarios)**
+
+_Los requisitos de esta sección los implementa `cbl-frontend`; el backend solo garantiza que la API los soporte._
 
 - **FR-026**: La pantalla de Login MUST pedir correo y contraseña, con validaciones.
 - **FR-027**: La vista de prestamista MUST ofrecer un formulario para solicitar (monto y plazo) y una lista "Mis préstamos" con estado.
@@ -262,7 +264,7 @@ Como prestamista o administrador, quiero cerrar sesión de forma segura.
 - **SC-008**: Tras 5 intentos de inicio de sesión fallidos con un mismo correo (exista o no), el 100 % de los intentos siguientes con ese correo durante 15 minutos son bloqueados con un mensaje que no revela si el correo existe.
 - **SC-009**: Una sesión deja de ser válida a los 10 minutos en el 100 % de los casos.
 - **SC-010**: Un cambio de límites se aplica a la siguiente solicitud nueva, sin interrupción del servicio ni redespliegue.
-- **SC-011**: El 100 % de los intentos de un administrador por desactivar su propia cuenta son rechazados.
+- **SC-011**: El 100 % de los intentos de un administrador por desactivar su propia cuenta o cambiarse su propio rol son rechazados.
 
 ## Supuestos
 

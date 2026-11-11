@@ -56,7 +56,7 @@ Cada escenario enlaza el requisito o criterio de éxito que comprueba. Rutas seg
 | 13 | Límites | Admin: `PUT /api/parameters/loan-limits` con otros valores; Borrower solicita | La solicitud nueva se valida con los valores actualizados, sin redesplegar | FR-024, SC-010 |
 | 14 | Usuarios | Admin: crear usuario con contraseña de 7 caracteres, luego de 8 | 422 y luego 201; correo duplicado → 409 | FR-020, FR-021 |
 | 15 | Desactivar | Admin: `PUT /api/users/{id}` con `isActive=false` | El usuario ya no puede iniciar sesión; sus préstamos se conservan | FR-022 |
-| 16 | Auto-baja | Admin se desactiva a sí mismo | 403 | FR-020, SC-011 |
+| 16 | Auto-baja o cambio de rol propio | Admin se desactiva o se cambia el rol a sí mismo | 403 en ambos casos | FR-020, SC-011 |
 | 17 | Bloqueo | 5 logins fallidos con el mismo correo (exista o no) y un sexto | 423 con `Retry-After`; mismo mensaje para correos existentes e inexistentes | FR-003, SC-008 |
 | 18 | Expiración | Usar un token pasados 10 minutos | 401 | FR-002, SC-009 |
 | 19 | Errores | Provocar 401/403/404/409/422 | Siempre `application/problem+json` con `traceId`, sin detalles internos | Constitución IV |

@@ -107,7 +107,7 @@ src/
 │   ├── Caching/ (MemoryReadCache)
 │   └── DependencyInjection.cs
 └── CBL.Api/                     # composición y HTTP
-    ├── Endpoints|Controllers/   # delgados: request → caso de uso → DTO
+    ├── Endpoints/               # grupos de endpoints mínimos; equivalen a los "controladores" del principio I; delgados: request → caso de uso → DTO
     ├── Middleware/ (cabeceras de seguridad, correlation ID, manejo de errores)
     ├── Program.cs
     └── appsettings*.json        # sin secretos
