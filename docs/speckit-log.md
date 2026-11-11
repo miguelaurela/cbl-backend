@@ -135,9 +135,15 @@ Fuera de alcance
 - What I changed by hand and why / Qué cambié a mano y por qué: nada; aprobada por el usuario tal como se generó. / Nothing; approved by the user as generated.
 
 ## Phase 4 – /speckit.plan / Fase 4 – /speckit.plan
-- Date / Fecha:
+- Agent / Agente: Claude Code (`/speckit-plan`). Rama `001-gestion-prestamos`.
+- Date / Fecha: 2026-11-11
 - Prompt used / Prompt usado: (paste; it pins .NET 8, EF Core + InMemory, `.sqlproj`, FluentValidation, xUnit, `WebApplicationFactory`, SQL Server service container in CI with `SqlPackage`, no Testcontainers, CI and release workflows / pegar; aquí se fija .NET 8, EF Core + InMemory, `.sqlproj`, FluentValidation, xUnit, `WebApplicationFactory`, contenedor de servicio de SQL Server en CI con `SqlPackage`, sin Testcontainers, workflows de CI y release)
-- What I changed by hand and why / Qué cambié a mano y por qué:
+- Prompt applied / Prompt aplicado (resumen): "Fija el stack: .NET 8, EF Core + InMemory, `.sqlproj`, FluentValidation, xUnit y `WebApplicationFactory`; SQL Server como contenedor de servicio en CI con `SqlPackage`, sin Testcontainers; workflows de CI y de release. Usa `docs/planning/tasks-backend.md` como borrador." (Se aplicó el contenido del prompt descrito arriba; no había un texto literal en el log.) / (The content described above was applied; there was no literal text in the log.)
+- What it generated / Qué generó: `specs/001-gestion-prestamos/plan.md` (contexto técnico, verificación de la constitución sin violaciones, estructura de código, tabla de desviaciones D1–D8), `research.md` (16 decisiones), `data-model.md` (4 tablas, transiciones, validaciones), `contracts/openapi.yaml` (18 operaciones, YAML válido, referencias resueltas) y `quickstart.md` (20 escenarios).
+- Deviations from `docs/planning/tasks-backend.md` / Desviaciones del borrador: nombres `CBL.*`; `GET /api/loans` sin paginación; se omiten `GET /api/auth/me`, `GET /api/loans/{id}/audit` y `DELETE /api/users/{id}` (fuera del spec); bloqueo de login por correo en memoria; auto-baja de admin → 403; cuerpo opcional `version` al decidir; **nuevo `POST /api/auth/logout`** con revocación de `jti` en memoria (FR-004; no está en el contrato asumido por el frontend). / `CBL.*` names; no paging; endpoints outside the spec dropped; in-memory lockout per email; admin self-deactivation → 403; optional `version` on decisions; **new `POST /api/auth/logout`** with in-memory `jti` revocation (FR-004; not in the contract the frontend assumed).
+- Pending for the frontend / Pendiente para el frontend: llamar a `POST /api/auth/logout` al cerrar sesión y conciliar con este `openapi.yaml` (FE-74). / Call `POST /api/auth/logout` on sign-out and reconcile with this `openapi.yaml` (FE-74).
+- Environment note / Nota de entorno: la máquina solo tiene SDK de .NET 6 y 9; `global.json` exigirá el 8 antes de implementar. / The machine only has .NET SDK 6 and 9; `global.json` will require 8 before implementation.
+- What I changed by hand and why / Qué cambié a mano y por qué: nada; aprobada por el usuario tal como se generó, incluido el endpoint de logout. / Nothing; approved by the user as generated, including the logout endpoint.
 
 ## Phase 5 – /speckit.tasks / Fase 5 – /speckit.tasks
 - Date / Fecha:

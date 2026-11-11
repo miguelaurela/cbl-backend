@@ -1,0 +1,519 @@
+openapi: 3.0.3
+info:
+  title: CBL Project (Control Banking Loans) API
+  version: 1.0.0
+  description: |
+    Contrato REST del backend `cbl-backend` (referencia previa a la implementación; el documento definitivo
+    se generará desde el código, solo en Development).
+    Convenciones: prefijo `/api`, JSON camelCase, fechas ISO 8601 UTC, importes como número con 2 decimales,
+    enumeraciones como cadenas, ids GUID tratados como cadenas opacas.
+    Todo endpoint exige `Authorization: Bearer <jwt>` (vida de 10 minutos, sin refresh) salvo el login y `/health`.
+    Todo error no 2xx usa `application/problem+json` (RFC 7807).
+servers:
+  - url: http://localhost:5000
+    description: Desarrollo local
+tags:
+  - name: Auth
+  - name: Loans
+  - name: Users
+  - name: Parameters
+  - name: Health
+security:
+  - bearerAuth: []
+paths:
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesión (FR-001, FR-003)
+      description: |
+        Credenciales incorrectas, correo inexistente y usuario desactivado devuelven el mismo 401 genérico.
+        Tras 5 intentos fallidos con un mismo correo (exista o no) se bloquea ese correo 15 minutos (423 con `Retry-After`).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Sesión iniciada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '423':
+          description: Correo bloqueado temporalmente por intentos fallidos.
+          headers:
+            Retry-After:
+              description: Segundos hasta que termine el bloqueo.
+              schema: { type: integer }
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Cerrar sesión (FR-004)
+      description: |
+        Revoca el token actual (`jti`) hasta su expiración; cualquier uso posterior responde 401.
+        Idempotente para el mismo token mientras siga siendo válido.
+      responses:
+        '204':
+          description: Sesión cerrada.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/loans:
+    get:
+      tags: [Loans]
+      summary: Ver todos los préstamos (solo Admin; FR-013)
+      description: Más recientes primero. Sin paginación.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/LoanStatus' }
+      responses:
+        '200':
+          description: Lista de préstamos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Loan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+    post:
+      tags: [Loans]
+      summary: Solicitar un préstamo (solo Borrower; FR-006 a FR-010)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateLoanRequest' }
+      responses:
+        '201':
+          description: Préstamo creado en estado Pending.
+          headers:
+            Location:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Loan' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/loans/mine:
+    get:
+      tags: [Loans]
+      summary: Mis préstamos (solo Borrower; FR-011)
+      responses:
+        '200':
+          description: Préstamos del usuario autenticado.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Loan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/loans/{id}:
+    parameters:
+      - $ref: '#/components/parameters/LoanId'
+    get:
+      tags: [Loans]
+      summary: Detalle de un préstamo (dueño o Admin)
+      description: Un Borrower que consulta un préstamo ajeno recibe 404.
+      responses:
+        '200':
+          description: Préstamo.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Loan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+    put:
+      tags: [Loans]
+      summary: Editar mi préstamo mientras está Pending (solo Borrower dueño; FR-012)
+      description: Monto y plazo se revalidan con los límites vigentes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateLoanRequest' }
+      responses:
+        '200':
+          description: Préstamo actualizado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Loan' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+    delete:
+      tags: [Loans]
+      summary: Eliminar un préstamo Pending (dueño Borrower o Admin; FR-012)
+      responses:
+        '204':
+          description: Eliminado.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/loans/{id}/status:
+    parameters:
+      - $ref: '#/components/parameters/LoanId'
+    get:
+      tags: [Loans]
+      summary: Estado de un préstamo (dueño o Admin; consulta cacheada; FR-018, FR-019)
+      responses:
+        '200':
+          description: Estado actual.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoanStatusResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/loans/{id}/approve:
+    parameters:
+      - $ref: '#/components/parameters/LoanId'
+    post:
+      tags: [Loans]
+      summary: Aprobar un préstamo Pending (solo Admin; FR-014 a FR-017)
+      description: |
+        El cuerpo es opcional. Si incluye `version` y no coincide con la versión actual, se responde 409.
+        Una segunda decisión sobre el mismo préstamo siempre responde 409.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DecideLoanRequest' }
+      responses:
+        '200':
+          description: Préstamo aprobado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Loan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/loans/{id}/reject:
+    parameters:
+      - $ref: '#/components/parameters/LoanId'
+    post:
+      tags: [Loans]
+      summary: Rechazar un préstamo Pending (solo Admin; FR-014 a FR-017)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DecideLoanRequest' }
+      responses:
+        '200':
+          description: Préstamo rechazado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Loan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/users:
+    get:
+      tags: [Users]
+      summary: Listar usuarios (solo Admin; FR-020)
+      responses:
+        '200':
+          description: Usuarios.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+    post:
+      tags: [Users]
+      summary: Crear usuario (solo Admin; FR-020, FR-021)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateUserRequest' }
+      responses:
+        '201':
+          description: Usuario creado.
+          headers:
+            Location:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/users/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Users]
+      summary: Consultar un usuario (solo Admin; FR-020)
+      responses:
+        '200':
+          description: Usuario.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+    put:
+      tags: [Users]
+      summary: Actualizar o desactivar un usuario (solo Admin; FR-020, FR-022)
+      description: |
+        La desactivación es lógica (`isActive=false`); un usuario con préstamos nunca se elimina.
+        Un admin que intenta desactivar su propia cuenta recibe 403.
+        Un usuario desactivado con sesión vigente pierde el acceso al expirar su token (máx. 10 minutos).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateUserRequest' }
+      responses:
+        '200':
+          description: Usuario actualizado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/parameters/loan-limits:
+    get:
+      tags: [Parameters]
+      summary: Consultar los límites de monto (cualquier usuario autenticado; FR-024)
+      responses:
+        '200':
+          description: Límites vigentes.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoanLimits' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+    put:
+      tags: [Parameters]
+      summary: Modificar los límites de monto (solo Admin; FR-024)
+      description: Se aplica a las solicitudes nuevas, sin redesplegar. Las ya registradas conservan su monto.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoanLimits' }
+      responses:
+        '200':
+          description: Límites actualizados.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoanLimits' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /health:
+    get:
+      tags: [Health]
+      summary: Comprobación de vida
+      security: []
+      responses:
+        '200':
+          description: El servicio responde.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    LoanId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    Role:
+      type: string
+      enum: [Admin, Borrower]
+    LoanStatus:
+      type: string
+      enum: [Pending, Approved, Rejected]
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email, maxLength: 256 }
+        password: { type: string, maxLength: 200 }
+    LoginResponse:
+      type: object
+      required: [accessToken, tokenType, expiresAt, user]
+      properties:
+        accessToken: { type: string, description: 'JWT con claims sub, email, role, exp' }
+        tokenType: { type: string, enum: [Bearer] }
+        expiresAt: { type: string, format: date-time, description: 'Igual al claim exp (10 minutos)' }
+        user:
+          type: object
+          required: [id, email, fullName, role]
+          properties:
+            id: { type: string, format: uuid }
+            email: { type: string, format: email }
+            fullName: { type: string }
+            role: { $ref: '#/components/schemas/Role' }
+    Loan:
+      type: object
+      required: [id, borrowerId, borrowerName, borrowerEmail, amount, termMonths, status, createdAt, decidedAt, decidedById, decidedByName, version]
+      properties:
+        id: { type: string, format: uuid }
+        borrowerId: { type: string, format: uuid }
+        borrowerName: { type: string }
+        borrowerEmail: { type: string, format: email }
+        amount: { type: number, format: double, description: 'Decimal con 2 decimales' }
+        termMonths: { type: integer, minimum: 1, maximum: 60 }
+        status: { $ref: '#/components/schemas/LoanStatus' }
+        createdAt: { type: string, format: date-time }
+        decidedAt: { type: string, format: date-time, nullable: true }
+        decidedById: { type: string, format: uuid, nullable: true }
+        decidedByName: { type: string, nullable: true }
+        version: { type: integer, description: 'Token de concurrencia optimista' }
+    LoanStatusResponse:
+      type: object
+      required: [id, status, decidedAt, version]
+      properties:
+        id: { type: string, format: uuid }
+        status: { $ref: '#/components/schemas/LoanStatus' }
+        decidedAt: { type: string, format: date-time, nullable: true }
+        version: { type: integer }
+    CreateLoanRequest:
+      type: object
+      required: [amount, termMonths]
+      properties:
+        amount: { type: number, format: double, exclusiveMinimum: true, minimum: 0, description: 'Dentro de los límites vigentes; máximo 2 decimales' }
+        termMonths: { type: integer, minimum: 1, maximum: 60 }
+    DecideLoanRequest:
+      type: object
+      properties:
+        version: { type: integer, description: 'Opcional; si no coincide con la versión actual se responde 409' }
+    LoanLimits:
+      type: object
+      required: [minAmount, maxAmount]
+      properties:
+        minAmount: { type: number, format: double, exclusiveMinimum: true, minimum: 0 }
+        maxAmount: { type: number, format: double, description: 'Debe ser mayor que minAmount' }
+    User:
+      type: object
+      required: [id, email, fullName, role, isActive, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        fullName: { type: string }
+        role: { $ref: '#/components/schemas/Role' }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    CreateUserRequest:
+      type: object
+      required: [email, fullName, password, role]
+      properties:
+        email: { type: string, format: email, maxLength: 256, description: 'Único; no distingue mayúsculas' }
+        fullName: { type: string, maxLength: 200 }
+        password: { type: string, minLength: 8, maxLength: 200 }
+        role: { $ref: '#/components/schemas/Role' }
+    UpdateUserRequest:
+      type: object
+      required: [fullName, role, isActive]
+      properties:
+        fullName: { type: string, maxLength: 200 }
+        role: { $ref: '#/components/schemas/Role' }
+        isActive: { type: boolean }
+        password: { type: string, minLength: 8, maxLength: 200, description: 'Opcional; restablece la contraseña' }
+    ProblemDetails:
+      type: object
+      required: [title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        traceId: { type: string, description: 'Correlation ID de la petición' }
+        errors:
+          type: object
+          description: 'Solo en errores de validación: campo (camelCase) → mensajes'
+          additionalProperties:
+            type: array
+            items: { type: string }
+  responses:
+    BadRequest:
+      description: Solicitud mal formada (por ejemplo, JSON inválido).
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    Unauthorized:
+      description: Sin sesión válida, sesión expirada o credenciales incorrectas.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    Forbidden:
+      description: El rol o el estado no permite la operación.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    NotFound:
+      description: No existe o no es accesible para el usuario.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    Conflict:
+      description: Conflicto de estado o de concurrencia (ya decidido, decisión simultánea, correo duplicado, préstamo no Pending).
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    ValidationFailed:
+      description: Datos inválidos; `errors` indica el mensaje por campo.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    TooManyRequests:
+      description: Límite de tasa superado.
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
