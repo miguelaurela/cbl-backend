@@ -235,16 +235,16 @@ Solución en la raíz del repositorio, según el plan: `src/CBL.Domain`, `src/CB
 
 ### Pruebas de la historia 6 ⚠️
 
-- [ ] T085 [P] [US6] Pruebas de manejadores en `tests/CBL.UnitTests/Users/UserHandlersTests.cs`: crear (correo único y normalizado, contraseña de al menos 8 caracteres guardada con hash), actualizar (`fullName`, `role`, `isActive` y contraseña opcional), un admin que intenta desactivarse o cambiarse el rol a sí mismo lanza `ForbiddenException`, reactivar a otro usuario funciona, usuario inexistente → `NotFoundException`
-- [ ] T086 [P] [US6] Pruebas de validadores en `tests/CBL.UnitTests/Users/UserValidatorsTests.cs`: contraseña de 7 caracteres rechazada y de 8 aceptada; correo con formato inválido; rol fuera de `Admin`/`Borrower`
-- [ ] T087 [P] [US6] Pruebas de integración en `tests/CBL.IntegrationTests/UsersTests.cs`: CRUD completo; contraseña de 7 caracteres → 422; correo duplicado (incluso con otras mayúsculas) → 409; Borrower → 403; admin que se desactiva o se cambia el rol → 403; reactivar a otro usuario funciona; usuario desactivado → 401 en el login y sus préstamos se conservan
+- [x] T085 [P] [US6] Pruebas de manejadores en `tests/CBL.UnitTests/Users/UserHandlersTests.cs`: crear (correo único y normalizado, contraseña de al menos 8 caracteres guardada con hash), actualizar (`fullName`, `role`, `isActive` y contraseña opcional), un admin que intenta desactivarse o cambiarse el rol a sí mismo lanza `ForbiddenException`, reactivar a otro usuario funciona, usuario inexistente → `NotFoundException`
+- [x] T086 [P] [US6] Pruebas de validadores en `tests/CBL.UnitTests/Users/UserValidatorsTests.cs`: contraseña de 7 caracteres rechazada y de 8 aceptada; correo con formato inválido; rol fuera de `Admin`/`Borrower`
+- [x] T087 [P] [US6] Pruebas de integración en `tests/CBL.IntegrationTests/UsersTests.cs`: CRUD completo; contraseña de 7 caracteres → 422; correo duplicado (incluso con otras mayúsculas) → 409; Borrower → 403; admin que se desactiva o se cambia el rol → 403; reactivar a otro usuario funciona; usuario desactivado → 401 en el login y sus préstamos se conservan
 
 ### Implementación de la historia 6
 
-- [ ] T088 [P] [US6] Crear en `src/CBL.Application/Users/` los DTOs `UserDto`, `CreateUserRequest` y `UpdateUserRequest` y sus validadores (correo `maxLength 256`, `fullName maxLength 200`, contraseña `minLength 8` y `maxLength 200`, `role` en `Admin`/`Borrower`)
-- [ ] T089 [P] [US6] Implementar `CreateUserHandler`, `GetUsersHandler`, `GetUserByIdHandler` y `UpdateUserHandler` en `src/CBL.Application/Users/` (correo único, contraseña con hash, desactivación lógica por `isActive=false`, nunca se elimina a un usuario con historial, un admin no se desactiva a sí mismo)
-- [ ] T090 [US6] Crear `src/CBL.Api/Endpoints/UserEndpoints.cs` con `GET /api/users`, `POST /api/users`, `GET /api/users/{id}` y `PUT /api/users/{id}` (`AdminOnly`) con las respuestas del contrato (dep: T088, T089)
-- [ ] T091 [US6] Registrar los servicios de la historia en `src/CBL.Application/DependencyInjection.cs` y comprobar T085–T087 en verde (dep: T090)
+- [x] T088 [P] [US6] Crear en `src/CBL.Application/Users/` los DTOs `UserDto`, `CreateUserRequest` y `UpdateUserRequest` y sus validadores (correo `maxLength 256`, `fullName maxLength 200`, contraseña `minLength 8` y `maxLength 200`, `role` en `Admin`/`Borrower`)
+- [x] T089 [P] [US6] Implementar `CreateUserHandler`, `GetUsersHandler`, `GetUserByIdHandler` y `UpdateUserHandler` en `src/CBL.Application/Users/` (correo único, contraseña con hash, desactivación lógica por `isActive=false`, nunca se elimina a un usuario con historial, un admin no se desactiva a sí mismo)
+- [x] T090 [US6] Crear `src/CBL.Api/Endpoints/UserEndpoints.cs` con `GET /api/users`, `POST /api/users`, `GET /api/users/{id}` y `PUT /api/users/{id}` (`AdminOnly`) con las respuestas del contrato (dep: T088, T089)
+- [x] T091 [US6] Registrar los servicios de la historia en `src/CBL.Application/DependencyInjection.cs` y comprobar T085–T087 en verde (dep: T090)
 
 **Punto de control**: las historias 1 a 6 funcionan.
 
@@ -258,14 +258,14 @@ Solución en la raíz del repositorio, según el plan: `src/CBL.Domain`, `src/CB
 
 ### Pruebas de la historia 7 ⚠️
 
-- [ ] T092 [P] [US7] Pruebas de manejadores y validador en `tests/CBL.UnitTests/Parameters/LoanLimitsHandlersTests.cs`: mínimo > 0 y máximo > mínimo; la actualización elimina la clave `loan-limits` de la caché; la siguiente solicitud usa los valores nuevos; los préstamos ya registrados conservan su monto
-- [ ] T093 [P] [US7] Pruebas de integración en `tests/CBL.IntegrationTests/LoanLimitsTests.cs`: cualquier usuario autenticado lee los límites; Borrower modificando → 403; el Admin cambia los límites y la siguiente solicitud se valida con ellos; valores inválidos → 422
+- [x] T092 [P] [US7] Pruebas de manejadores y validador en `tests/CBL.UnitTests/Parameters/LoanLimitsHandlersTests.cs`: mínimo > 0 y máximo > mínimo; la actualización elimina la clave `loan-limits` de la caché; la siguiente solicitud usa los valores nuevos; los préstamos ya registrados conservan su monto
+- [x] T093 [P] [US7] Pruebas de integración en `tests/CBL.IntegrationTests/LoanLimitsTests.cs`: cualquier usuario autenticado lee los límites; Borrower modificando → 403; el Admin cambia los límites y la siguiente solicitud se valida con ellos; valores inválidos → 422
 
 ### Implementación de la historia 7
 
-- [ ] T094 [P] [US7] Crear `LoanLimitsDto` (`minAmount`, `maxAmount`) y su validador (mínimo > 0 y máximo > mínimo) en `src/CBL.Application/Parameters/`
-- [ ] T095 [US7] Implementar `GetLoanLimitsHandler` y `UpdateLoanLimitsHandler` en `src/CBL.Application/Parameters/` reutilizando `LoanLimitsReader` (T061): persistir en `SystemParameters` con `UpdatedAt` y `UpdatedByUserId`, y eliminar `loan-limits` de la caché después de guardar (dep: T094, T061)
-- [ ] T096 [US7] Crear `src/CBL.Api/Endpoints/ParameterEndpoints.cs` con `GET /api/parameters/loan-limits` (autenticado) y `PUT /api/parameters/loan-limits` (`AdminOnly`), registrar los servicios y comprobar T092 y T093 en verde (dep: T095)
+- [x] T094 [P] [US7] Crear `LoanLimitsDto` (`minAmount`, `maxAmount`) y su validador (mínimo > 0 y máximo > mínimo) en `src/CBL.Application/Parameters/`
+- [x] T095 [US7] Implementar `GetLoanLimitsHandler` y `UpdateLoanLimitsHandler` en `src/CBL.Application/Parameters/` reutilizando `LoanLimitsReader` (T061): persistir en `SystemParameters` con `UpdatedAt` y `UpdatedByUserId`, y eliminar `loan-limits` de la caché después de guardar (dep: T094, T061)
+- [x] T096 [US7] Crear `src/CBL.Api/Endpoints/ParameterEndpoints.cs` con `GET /api/parameters/loan-limits` (autenticado) y `PUT /api/parameters/loan-limits` (`AdminOnly`), registrar los servicios y comprobar T092 y T093 en verde (dep: T095)
 
 **Punto de control**: las historias 1 a 7 funcionan.
 
@@ -279,14 +279,14 @@ Solución en la raíz del repositorio, según el plan: `src/CBL.Domain`, `src/CB
 
 ### Pruebas de la historia 8 ⚠️
 
-- [ ] T097 [P] [US8] Pruebas del almacén y del manejador en `tests/CBL.UnitTests/Auth/LogoutTests.cs`: revocar un `jti` lo marca como revocado; la entrada expira junto con el token (no crece sin límite); otros tokens no se ven afectados
-- [ ] T098 [P] [US8] Pruebas de integración en `tests/CBL.IntegrationTests/LogoutTests.cs`: `POST /api/auth/logout` responde 204 y reutilizar el mismo token responde 401; un token de otro usuario sigue válido
+- [x] T097 [P] [US8] Pruebas del almacén y del manejador en `tests/CBL.UnitTests/Auth/LogoutTests.cs`: revocar un `jti` lo marca como revocado; la entrada expira junto con el token (no crece sin límite); otros tokens no se ven afectados
+- [x] T098 [P] [US8] Pruebas de integración en `tests/CBL.IntegrationTests/LogoutTests.cs`: `POST /api/auth/logout` responde 204 y reutilizar el mismo token responde 401; un token de otro usuario sigue válido
 
 ### Implementación de la historia 8
 
-- [ ] T099 [P] [US8] Implementar `src/CBL.Infrastructure/Security/TokenRevocationStore.cs` en memoria con expiración igual a la del token
-- [ ] T100 [US8] Implementar `src/CBL.Application/Auth/Logout/LogoutHandler.cs` y `POST /api/auth/logout` (autenticado, 204) en `src/CBL.Api/Endpoints/AuthEndpoints.cs` (dep: T099, T054)
-- [ ] T101 [US8] En `src/CBL.Api/Extensions/AuthExtensions.cs` hacer que `OnTokenValidated` de JwtBearer rechace con 401 los tokens cuyo `jti` esté revocado, registrar los servicios y comprobar T097 y T098 en verde (dep: T100, T037)
+- [x] T099 [P] [US8] Implementar `src/CBL.Infrastructure/Security/TokenRevocationStore.cs` en memoria con expiración igual a la del token
+- [x] T100 [US8] Implementar `src/CBL.Application/Auth/Logout/LogoutHandler.cs` y `POST /api/auth/logout` (autenticado, 204) en `src/CBL.Api/Endpoints/AuthEndpoints.cs` (dep: T099, T054)
+- [x] T101 [US8] En `src/CBL.Api/Extensions/AuthExtensions.cs` hacer que `OnTokenValidated` de JwtBearer rechace con 401 los tokens cuyo `jti` esté revocado, registrar los servicios y comprobar T097 y T098 en verde (dep: T100, T037)
 
 **Punto de control**: las ocho historias funcionan.
 
