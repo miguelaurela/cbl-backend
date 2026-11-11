@@ -125,8 +125,14 @@ Fuera de alcance
 - What I changed by hand and why / Qué cambié a mano y por qué: nada; aprobada por el usuario tal como se generó. Antes de la aprobación el agente retiró "tabla de límites" del FR-023 por ser un detalle de implementación. / Nothing; approved by the user as generated. Before approval the agent removed "tabla de límites" from FR-023 as an implementation detail.
 
 ## Phase 3 – /speckit.clarify / Fase 3 – /speckit.clarify
-- Date / Fecha:
-- Questions it asked and my answers / Preguntas que hizo y mis respuestas:
+- Agent / Agente: Claude Code (`/speckit-clarify`). Rama `001-gestion-prestamos`.
+- Date / Fecha: 2026-11-11
+- Questions it asked and my answers / Preguntas que hizo y mis respuestas: no existe en el repo una lista de "10 preguntas"; el agente hizo el barrido de ambigüedades y resolvió 8 puntos (límite de la skill: 5 preguntas al usuario). Quedaron registrados en `## Clarifications` de `spec.md`. / There is no list of "10 questions" in the repo; the agent scanned for ambiguities and resolved 8 points (skill cap: 5 questions to the user). Recorded in `## Clarifications` of `spec.md`.
+  - Respondidas por el usuario (3, opción recomendada en las tres) / Answered by the user (3, recommended option each): (1) un admin NO puede desactivar su propia cuenta; (2) un usuario desactivado pierde el acceso al expirar su sesión (máx. 10 min); (3) el bloqueo de login se cuenta por correo, exista o no.
+  - Resueltas desde ADR, sin preguntar (5) / Resolved from ADRs, not asked (5): límites nuevos solo afectan solicitudes nuevas (ADR-0008); desactivación lógica, nunca se elimina a usuarios con préstamos (ADR-0017); USD con formato `en-US`, interfaz en español, lista del admin con filtro por estado y sin paginación (ADR-0025). ADR-0023 ya estaba reflejado en la Fase 2.
+  - Supuestos por defecto NO confirmados / Unconfirmed default assumptions: correo sin distinguir mayúsculas; al editar un préstamo Pendiente se cambian monto y plazo, revalidados con los límites vigentes.
+- Spec changes / Cambios en el spec: FR-003, 013, 020, 022, 024 ajustados; FR-031 y SC-011 añadidos; escenarios y casos límite nuevos; 31 FR y 11 SC en total; checklist sin regresiones (15/15) y 0 marcadores. / FR-003, 013, 020, 022, 024 adjusted; FR-031 and SC-011 added; new scenarios and edge cases; 31 FR and 11 SC total; checklist with no regressions (15/15) and 0 markers.
+- What I changed by hand and why / Qué cambié a mano y por qué: nada; aprobada por el usuario tal como se generó. / Nothing; approved by the user as generated.
 
 ## Phase 4 – /speckit.plan / Fase 4 – /speckit.plan
 - Date / Fecha:

@@ -15,6 +15,24 @@
 
 Existen exactamente estos dos roles. Todo usuario tiene uno y solo uno.
 
+## Clarifications
+
+### Session 2026-11-11
+
+Respondidas por el usuario (3):
+
+- Q: ¿Puede un administrador desactivar su propia cuenta? → A: No; el sistema lo rechaza con un mensaje claro.
+- Q: Si se desactiva a un usuario con sesión vigente, ¿cuándo pierde el acceso? → A: Al expirar su sesión (máximo 10 minutos); no hay comprobación adicional en cada petición.
+- Q: ¿El bloqueo por intentos fallidos se cuenta por cuenta o por correo más origen? → A: Por correo, incluso si el correo no existe, para no revelar su existencia.
+
+Resueltas con las decisiones ya registradas (ADR) (5):
+
+- Q: ¿Los nuevos límites de monto afectan a solicitudes ya registradas? → A: No; solo a solicitudes nuevas (ADR-0008).
+- Q: ¿Desactivar un usuario es borrado o desactivación lógica? → A: Lógica; los usuarios con préstamos nunca se eliminan (ADR-0017).
+- Q: ¿En qué moneda y formato se muestran los montos? → A: USD con formato `en-US` (ADR-0025).
+- Q: ¿En qué idioma se presenta la interfaz? → A: Español (ADR-0025).
+- Q: ¿La lista de solicitudes del administrador se pagina o se filtra? → A: Lista simple con filtro por estado, sin paginación (ADR-0025).
+
 ## Escenarios de usuario y pruebas *(obligatorio)*
 
 ### Historia de usuario 1 – Iniciar sesión (Prioridad: P1)
@@ -29,7 +47,7 @@ Como prestamista o administrador, quiero iniciar sesión con mi correo y contras
 
 1. **Dado** un usuario activo con credenciales válidas, **cuando** inicia sesión, **entonces** obtiene acceso a las funciones de su rol.
 2. **Dado** credenciales incorrectas, **cuando** intenta iniciar sesión, **entonces** recibe un mensaje genérico que no revela si el correo existe.
-3. **Dado** un usuario con 5 intentos de inicio de sesión fallidos, **cuando** intenta de nuevo dentro de los 15 minutos siguientes, **entonces** el sistema bloquea el intento y responde con un mensaje claro, sin revelar si el correo existe.
+3. **Dado** un correo con 5 intentos de inicio de sesión fallidos (exista o no), **cuando** se intenta de nuevo con ese correo dentro de los 15 minutos siguientes, **entonces** el sistema bloquea el intento y responde con un mensaje claro, sin revelar si el correo existe.
 4. **Dado** una sesión iniciada hace 10 minutos, **cuando** el usuario intenta hacer cualquier operación, **entonces** el sistema lo trata como no autenticado y debe iniciar sesión de nuevo.
 5. **Dado** una solicitud sin sesión válida a cualquier función distinta del inicio de sesión, **cuando** se procesa, **entonces** recibe un error de no autenticado.
 
@@ -80,7 +98,8 @@ Como administrador, quiero ver todas las solicitudes con el prestamista, el mont
 **Escenarios de aceptación**:
 
 1. **Dado** un administrador con sesión válida, **cuando** consulta las solicitudes, **entonces** ve todos los préstamos con prestamista, monto y estado.
-2. **Dado** un prestamista con sesión válida, **cuando** intenta acceder a la vista de todas las solicitudes, **entonces** se le deniega el acceso.
+2. **Dado** un administrador que filtra las solicitudes por estado, **cuando** aplica el filtro, **entonces** ve solo las solicitudes con ese estado; la lista no se pagina.
+3. **Dado** un prestamista con sesión válida, **cuando** intenta acceder a la vista de todas las solicitudes, **entonces** se le deniega el acceso.
 
 ---
 
@@ -116,6 +135,8 @@ Como administrador, quiero gestionar usuarios (crear, consultar, actualizar, des
 2. **Dado** una contraseña de menos de 8 caracteres o un correo ya existente, **cuando** el administrador intenta crear el usuario, **entonces** se rechaza con un mensaje claro por campo.
 3. **Dado** un usuario desactivado, **cuando** intenta iniciar sesión, **entonces** no obtiene acceso.
 4. **Dado** un prestamista, **cuando** intenta acceder a la gestión de usuarios, **entonces** se le deniega el acceso.
+5. **Dado** un administrador, **cuando** intenta desactivar su propia cuenta, **entonces** el sistema lo rechaza con un mensaje claro y la cuenta sigue activa.
+6. **Dado** un usuario con préstamos, **cuando** un administrador lo desactiva, **entonces** el usuario queda desactivado y sus préstamos y decisiones se conservan; nunca se elimina.
 
 ---
 
@@ -158,7 +179,9 @@ Como prestamista o administrador, quiero cerrar sesión de forma segura.
 - Un administrador intenta solicitar un préstamo: se le deniega el acceso.
 - Se modifican los límites mientras hay solicitudes Pendientes: las ya registradas conservan su monto; los nuevos valores solo se aplican a solicitudes nuevas.
 - Límites inválidos al modificarlos (mínimo menor o igual que 0, o mínimo mayor que el máximo): se rechaza con mensaje claro.
-- Un usuario es desactivado mientras tiene una sesión vigente: el acceso se pierde a más tardar al expirar la sesión.
+- Un usuario es desactivado mientras tiene una sesión vigente: el acceso se pierde a más tardar al expirar la sesión (máximo 10 minutos).
+- Un administrador intenta desactivar su propia cuenta: se rechaza.
+- Se acumulan 5 fallos de inicio de sesión con un correo que no existe: se bloquea igual que con uno existente, para no revelar su existencia.
 - Se consulta repetidamente el estado de los préstamos sin cambios: el resultado es el mismo y rápido; tras una decisión, la siguiente consulta refleja el cambio.
 - Un correo se escribe con distinta capitalización al crear un usuario o iniciar sesión: se trata como el mismo correo.
 
@@ -170,7 +193,7 @@ Como prestamista o administrador, quiero cerrar sesión de forma segura.
 
 - **FR-001**: El sistema MUST permitir iniciar sesión con correo y contraseña, y MUST exigir sesión válida para cualquier función distinta del inicio de sesión.
 - **FR-002**: Una sesión MUST expirar a los 10 minutos, sin renovación automática; el usuario MUST iniciar sesión de nuevo.
-- **FR-003**: El sistema MUST bloquear temporalmente nuevos intentos de inicio de sesión tras 5 intentos fallidos durante 15 minutos (valores configurables), con un mensaje claro que no revele si el correo existe.
+- **FR-003**: El sistema MUST bloquear temporalmente nuevos intentos de inicio de sesión tras 5 intentos fallidos con un mismo correo durante 15 minutos (valores configurables), exista o no ese correo, con un mensaje claro que no revele si el correo existe.
 - **FR-004**: Los usuarios MUST poder cerrar sesión de forma segura.
 - **FR-005**: El sistema MUST distinguir exactamente dos roles (Admin y Borrower) y MUST denegar el acceso a quien intente una función fuera de su rol.
 
@@ -183,7 +206,7 @@ Como prestamista o administrador, quiero cerrar sesión de forma segura.
 - **FR-010**: Una solicitud con monto o plazo inválidos MUST rechazarse con un mensaje claro por campo.
 - **FR-011**: Un Borrower MUST poder ver la lista y el estado de sus propios préstamos y MUST NOT poder ver ni modificar préstamos de otros.
 - **FR-012**: Un Borrower MUST poder editar o eliminar su propio préstamo únicamente mientras esté Pendiente. Un Admin MUST poder eliminar únicamente préstamos Pendientes.
-- **FR-013**: Un Admin MUST poder ver todos los préstamos con prestamista, monto y estado.
+- **FR-013**: Un Admin MUST poder ver todos los préstamos con prestamista, monto y estado, y filtrarlos por estado. La lista no se pagina.
 
 **Decisiones**
 
@@ -196,14 +219,14 @@ Como prestamista o administrador, quiero cerrar sesión de forma segura.
 
 **Usuarios**
 
-- **FR-020**: Un Admin MUST poder crear, consultar, actualizar y desactivar usuarios. No existe registro público.
+- **FR-020**: Un Admin MUST poder crear, consultar, actualizar y desactivar usuarios. No existe registro público. Un Admin MUST NOT poder desactivar su propia cuenta.
 - **FR-021**: Los usuarios creados por un Admin MUST tener una contraseña de al menos 8 caracteres; el correo MUST ser único.
-- **FR-022**: Un usuario desactivado MUST NOT poder iniciar sesión.
+- **FR-022**: Un usuario desactivado MUST NOT poder iniciar sesión. La desactivación es lógica: un usuario con préstamos MUST NOT eliminarse y su historial se conserva. Si tenía una sesión vigente, pierde el acceso a más tardar al expirar esa sesión.
 
 **Límites de monto**
 
 - **FR-023**: Los límites mínimo y máximo MUST almacenarse como un parámetro de configuración persistente, no fijos en el programa.
-- **FR-024**: Un Admin MUST poder consultar y modificar esos límites, y el cambio MUST aplicarse a las solicitudes nuevas sin redesplegar.
+- **FR-024**: Un Admin MUST poder consultar y modificar esos límites, y el cambio MUST aplicarse a las solicitudes nuevas sin redesplegar. Las solicitudes ya registradas conservan su monto aunque queden fuera de los nuevos límites.
 
 **Datos iniciales**
 
@@ -216,6 +239,7 @@ Como prestamista o administrador, quiero cerrar sesión de forma segura.
 - **FR-028**: La vista de administrador MUST mostrar la lista de solicitudes con las acciones Aprobar y Rechazar en las pendientes, y permitir gestionar los límites de monto.
 - **FR-029**: La pantalla de usuarios del administrador MUST permitir crear, consultar, actualizar y desactivar usuarios.
 - **FR-030**: Las rutas de administrador MUST estar protegidas para usuarios sin ese rol.
+- **FR-031**: La interfaz MUST presentar sus etiquetas y mensajes en español, y los montos en USD con formato `en-US`.
 
 ### Entidades clave
 
@@ -235,20 +259,21 @@ Como prestamista o administrador, quiero cerrar sesión de forma segura.
 - **SC-005**: El 100 % de las decisiones queda registrado con el administrador que la tomó y la fecha.
 - **SC-006**: El 95 % de las consultas de estado de préstamos devuelve resultado en menos de 1 segundo.
 - **SC-007**: El 100 % de las solicitudes con datos inválidos recibe un mensaje que identifica el campo con el error.
-- **SC-008**: Tras 5 intentos de inicio de sesión fallidos, el 100 % de los intentos siguientes durante 15 minutos son bloqueados con un mensaje que no revela si el correo existe.
+- **SC-008**: Tras 5 intentos de inicio de sesión fallidos con un mismo correo (exista o no), el 100 % de los intentos siguientes con ese correo durante 15 minutos son bloqueados con un mensaje que no revela si el correo existe.
 - **SC-009**: Una sesión deja de ser válida a los 10 minutos en el 100 % de los casos.
 - **SC-010**: Un cambio de límites se aplica a la siguiente solicitud nueva, sin interrupción del servicio ni redespliegue.
+- **SC-011**: El 100 % de los intentos de un administrador por desactivar su propia cuenta son rechazados.
 
 ## Supuestos
 
 - Los usuarios acceden a través de la interfaz web (3 pantallas principales más la gestión de usuarios) o directamente por la API REST; el contrato entre ambos es esa API.
 - La contraseña `123` de los datos iniciales es solo de ejemplo para la demostración.
-- Los montos se expresan en una única moneda, sin conversión.
+- Los montos se expresan en una única moneda (USD), sin conversión.
+- Al editar un préstamo Pendiente, el prestamista puede cambiar monto y plazo, y los nuevos valores se validan con los límites vigentes (supuesto por defecto, no confirmado por el usuario).
 - Un préstamo no se "desembolsa": Aprobado es solo un estado administrativo.
 - Los límites cambiados solo aplican a solicitudes nuevas; las ya registradas conservan su monto aunque queden fuera de los nuevos límites.
 - Desactivar un usuario no borra su historial: sus préstamos y decisiones se conservan.
 - El correo se compara sin distinguir mayúsculas y minúsculas.
-- Se asume que un administrador no puede desactivar su propia cuenta, para evitar dejar el sistema sin administradores.
 - Un usuario cuenta con un único rol.
 - Dependencia: existe una base de datos persistente donde se almacenan usuarios, préstamos, decisiones y límites.
 
