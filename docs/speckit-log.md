@@ -5,7 +5,9 @@ One entry per phase. Fill in the date and "what I changed by hand" when each one
 Una entrada por fase. Completa fecha y "qué cambié a mano" al ejecutar cada una. Los prompts están en español porque los artefactos de Spec Kit se redactan en español (ADR-0022). Registra aquí el tag de Spec Kit fijado y qué agente ejecutó cada fase.
 
 ## Phase 1 – /speckit.constitution / Fase 1 – /speckit.constitution
-- Date / Fecha:
+- Spec Kit version / Versión de Spec Kit: `specify-cli` 1.4.1.dev0 (commit `40dd00f`), instalado con `uv tool install --python 3.12`. Integraciones: Claude Code (predeterminada) y GitHub Copilot. / Integrations: Claude Code (default) and GitHub Copilot.
+- Agent / Agente: Claude Code. En esta versión los comandos son skills con guion (`/speckit-constitution`), no con punto; el prompt se aplicó con el mismo contenido. / In this version commands are hyphenated skills (`/speckit-constitution`), not dotted; the prompt content was applied as is.
+- Date / Fecha: 2026-11-11
 - Prompt used / Prompt usado:
 
 ```
@@ -55,8 +57,8 @@ Entrega
 - CI en GitHub Actions: compila, despliega el esquema en un SQL Server temporal, ejecuta todas las pruebas y publica el .dacpac como artefacto.
 - CD solo publica artefactos: al subir un tag v*.*.* se adjuntan a un GitHub Release el .dacpac y el zip de publicación de la API. No hay despliegue en la nube.
 ```
-- What it generated / Qué generó:
-- What I changed by hand and why / Qué cambié a mano y por qué:
+- What it generated / Qué generó: `.specify/memory/constitution.md` v1.0.0 (ratificada 2026-11-11) con 7 principios (arquitectura limpia; persistencia con `.sqlproj`; seguridad por defecto; consistencia de negocio y errores; caché en lectura; calidad y pruebas; especificación primero y MVP), una sección de restricciones técnicas y de entrega, una de flujo de desarrollo y la gobernanza.
+- What I changed by hand and why / Qué cambié a mano y por qué: nada en el contenido; solo se eliminó el informe de impacto temporal (comentario HTML) antes del commit, como indica la skill. Aprobada por el usuario. / Nothing in the content; only the temporary sync-impact HTML comment was removed before the commit, as the skill instructs. Approved by the user.
 
 ## Phase 2 – /speckit.specify / Fase 2 – /speckit.specify
 - Date / Fecha:
