@@ -1,0 +1,21 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+*.dacpac
+
+## Secretos y configuración local
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+.env
+
+## IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+## Spec Kit: NO se ignoran .specify/ ni specs/ (son evidencia del proceso)
