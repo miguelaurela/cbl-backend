@@ -16,6 +16,7 @@
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.Data.SqlClient" />
+    <PackageReference Include="YamlDotNet" />
     <PackageReference Include="coverlet.collector" />
   </ItemGroup>
 

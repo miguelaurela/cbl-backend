@@ -19,7 +19,7 @@ El frontend vive en un repositorio separado: [`cbl-frontend`](https://github.com
 ```
 
 ## Estado actual
-La implementación (fase 7 de Spec Kit) está **en curso** en `main`: preparación, fundamentos y las historias 1 a 5 están hechas (login, solicitar un préstamo, mis préstamos y estado, lista del admin, aprobar o rechazar con auditoría y control de concurrencia). Faltan la gestión de usuarios (US6), la gestión de límites de monto (US7), el cierre de sesión (US8) y el pulido. El avance por tarea está en [`specs/001-gestion-prestamos/tasks.md`](specs/001-gestion-prestamos/tasks.md).
+La implementación (fase 7 de Spec Kit) está **completa** en `main`: las ocho historias de usuario (login, solicitar un préstamo, mis préstamos y estado, lista del admin, aprobar o rechazar con auditoría y control de concurrencia, gestión de usuarios, límites de monto y cierre de sesión), los workflows de CI y de release y las tareas de pulido están hechas. Las tareas están en [`specs/001-gestion-prestamos/tasks.md`](specs/001-gestion-prestamos/tasks.md) y la validación en vivo del quickstart en [`quickstart-results.md`](specs/001-gestion-prestamos/quickstart-results.md). Lo siguiente es el frontend (`cbl-frontend`), que debe llamar a `POST /api/auth/logout` y conciliarse con este contrato OpenAPI.
 
 ## Cómo ejecutar (local, sin Docker ni SQL Server)
 Requisitos: SDK de .NET 8 (`global.json` lo fija).
@@ -97,11 +97,12 @@ Este proyecto se desarrolla con [GitHub Spec Kit](https://github.com/github/spec
 | 4 | /speckit-plan | plan.md, research.md, data-model.md, contracts/, quickstart.md | Hecho |
 | 5 | /speckit-tasks | tasks.md | Hecho |
 | 6 | /speckit-analyze | docs/speckit-log.md | Hecho |
-| 7 | /speckit-implement | código | En curso (historias del MVP hechas) |
+| 7 | /speckit-implement | código | Hecho (113 de 113 tareas) |
 
 ## CI/CD
 - **CI (GitHub Actions)**: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) compila (incluye `.sqlproj` → `.dacpac`), ejecuta las pruebas unitarias, despliega el esquema en un contenedor de servicio de SQL Server 2022 con `SqlPackage`, ejecuta las pruebas de integración (y falla si alguna se omite) y publica el `.dacpac` como artefacto ([ADR-0016](docs/decisions/0016-ci-pipeline.md)).
-- **CD = solo artefactos**: al subir un tag `v*.*.*` se creará un GitHub Release con el `.dacpac`, el zip de publicación de la API y los checksums (pendiente). Sin despliegue en la nube ([ADR-0024](docs/decisions/0024-cd-publishes-artifacts-only.md)).
+- **CD = solo artefactos**: al subir un tag `v*.*.*` se ejecuta [`.github/workflows/release.yml`](.github/workflows/release.yml), que reconstruye, ejecuta las pruebas unitarias y crea un GitHub Release con el `.dacpac`, el zip de publicación de la API y `SHA256SUMS.txt`. Sin despliegue en la nube ([ADR-0024](docs/decisions/0024-cd-publishes-artifacts-only.md)). El `.dacpac` se aplica a mano con `SqlPackage` y la API se ejecuta con `dotnet CBL.Api.dll`.
+- El documento OpenAPI que genera la API se exporta como artefacto de CI y una prueba comprueba que coincide con [`contracts/openapi.yaml`](specs/001-gestion-prestamos/contracts/openapi.yaml).
 
 ## Documentación
 - Análisis: [docs/00-analisis.es.md](docs/00-analisis.es.md)

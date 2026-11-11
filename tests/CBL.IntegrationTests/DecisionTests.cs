@@ -102,6 +102,35 @@ public sealed class DecisionTests(DatabaseFixture fixture) : IntegrationTestBase
     }
 
     [SqlServerFact]
+    public async Task The_body_is_really_optional_no_body_no_content_type_or_an_empty_form_body_all_work()
+    {
+        var (_, admin, firstId) = await ScenarioAsync();
+        var secondId = await (await Factory.CreateAuthorizedClientAsync(TestUsers.BorrowerEmail)).CreateLoanAsync(2000m, 6);
+        var thirdId = await (await Factory.CreateAuthorizedClientAsync(TestUsers.BorrowerEmail)).CreateLoanAsync(3000m, 6);
+
+        // 1) POST sin cuerpo y sin Content-Type (lo que envía fetch o Angular con body null).
+        using var bare = new HttpRequestMessage(HttpMethod.Post, $"/api/loans/{firstId}/approve");
+        (await admin.SendAsync(bare)).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // 2) Cuerpo vacío con Content-Type de formulario (lo que envía curl -X POST o PowerShell sin datos).
+        using var form = new HttpRequestMessage(HttpMethod.Post, $"/api/loans/{secondId}/reject")
+        {
+            Content = new FormUrlEncodedContent([])
+        };
+        (await admin.SendAsync(form)).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // 3) JSON mal formado sigue siendo un 400 claro.
+        using var broken = new HttpRequestMessage(HttpMethod.Post, $"/api/loans/{thirdId}/approve")
+        {
+            Content = new StringContent("{ roto", System.Text.Encoding.UTF8, "application/json")
+        };
+        var response = await admin.SendAsync(broken);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.Should().Be("application/problem+json");
+        (await Factory.StoredStatusAsync(thirdId)).Should().Be(LoanStatus.Pending);
+    }
+
+    [SqlServerFact]
     public async Task Deciding_an_unknown_loan_returns_404()
     {
         var (_, admin, _) = await ScenarioAsync();

@@ -11,7 +11,7 @@ using CBL.Infrastructure.Security;
 var builder = WebApplication.CreateBuilder(args);
 
 // Límite de tamaño de cuerpo: 64 KB.
-builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 64 * 1024);
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = RequestBodyLimitMiddleware.MaxBytes);
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Environment.IsDevelopment());
@@ -48,6 +48,7 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseCors(HttpPipelineExtensions.CorsPolicyName);
 app.UseRateLimiter();
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<RequestBodyLimitMiddleware>();   // 413 si el cuerpo declarado supera 64 KB, antes de autenticar
 
 // Swagger SOLO en Development. Va antes de la autorización porque la política de respaldo (todo autenticado)
 // también se aplica a rutas sin endpoint y bloquearía la documentación.

@@ -16,7 +16,10 @@ public static class AuthEndpoints
             .AllowAnonymous()
             .RequireRateLimiting(HttpPipelineExtensions.LoginRateLimitPolicy)
             .WithValidation<LoginRequest>()
-            .WithSummary("Iniciar sesión (FR-001, FR-003)");
+            .WithSummary("Iniciar sesión (FR-001, FR-003)")
+            .WithDescription("Correo inexistente, contraseña incorrecta y usuario desactivado devuelven el mismo 401 genérico. " +
+                             "Tras 5 intentos fallidos con un mismo correo (exista o no) se bloquea 15 minutos (423 con Retry-After).")
+            .ProducesProblems(400, 401, 422, 423, 429);
 
         // Autenticado (política de respaldo): revoca el token actual hasta su expiración.
         group.MapPost("/logout", (LogoutHandler handler) =>
@@ -25,7 +28,9 @@ public static class AuthEndpoints
 
                 return TypedResults.NoContent();
             })
-            .WithSummary("Cerrar sesión (FR-004)");
+            .WithSummary("Cerrar sesión (FR-004)")
+            .WithDescription("Revoca el token actual; una vez revocado, el token responde 401 en cualquier endpoint.")
+            .ProducesProblems(401, 429);
 
         return app;
     }

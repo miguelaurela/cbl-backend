@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace CBL.IntegrationTests.Support;
 
@@ -10,13 +11,19 @@ namespace CBL.IntegrationTests.Support;
 /// </summary>
 public sealed class CblWebApplicationFactory(
     IDictionary<string, string?>? overrides = null,
-    string environment = "Development") : WebApplicationFactory<Program>
+    string environment = "Development",
+    ILoggerProvider? loggerProvider = null) : WebApplicationFactory<Program>
 {
     public const string TestJwtKey = "clave-solo-para-pruebas-0123456789-ABCDEFGHIJ";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment(environment);
+
+        if (loggerProvider is not null)
+        {
+            builder.ConfigureLogging(logging => logging.AddProvider(loggerProvider));
+        }
 
         builder.ConfigureAppConfiguration((_, configuration) =>
         {
