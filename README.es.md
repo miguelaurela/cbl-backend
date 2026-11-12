@@ -5,6 +5,48 @@
 API REST en ASP.NET Core para la prueba técnica de Makers (versión .NET + Angular).
 El frontend vive en un repositorio separado: [`cbl-frontend`](https://github.com/miguelaurela/cbl-frontend).
 
+> **Para quien evalúa:** la **parte teórica** está en este mismo README, en la sección [Parte teórica](#parte-teórica). El código está en `src/`, las pruebas en `tests/` y cómo ejecutarlo en [Cómo ejecutar](#cómo-ejecutar-local-sin-docker-ni-sql-server).
+
+## Parte teórica
+
+### 1. Optimización en sistemas financieros
+- **Concurrencia**: I/O asíncrono, sin bloqueos de hilos. Concurrencia optimista (columna de versión) en entidades con baja contención; bloqueo pesimista solo donde la contención es alta y el costo de reintento es inaceptable.
+- **Caché**: en el lado de lectura (CQRS ligero), con invalidación explícita tras confirmar el guardado. Evolución: caché distribuida (Redis) al escalar horizontalmente.
+- **Escalabilidad**: servicios sin estado, lecturas escalables con réplicas o modelos de lectura, colas para trabajo no crítico, idempotencia en operaciones de escritura.
+- **Patrones**: Unit of Work, Repository, CQRS, Outbox.
+
+### 2. Seguridad en APIs financieras
+- **SQL Injection**: consultas parametrizadas (EF Core), nunca concatenar SQL.
+- **CSRF**: no aplica con `Authorization: Bearer` en cabecera; sí aplicaría si el token viviera en cookies (SameSite, tokens anti-CSRF).
+- **XSS**: salida codificada, CSP y cabeceras de seguridad; el token en memoria reduce el impacto.
+- **Otros**: JWT de vida corta con validación completa, autorización por roles y por recurso (anti-IDOR), rate limiting, DTOs (anti mass assignment), HTTPS/HSTS, CORS restringido, secretos fuera del repo, errores sin detalles internos, logs sin datos sensibles.
+
+### 3. Transacciones en sistemas distribuidos
+No hay una transacción ACID única entre servicios. Se usa:
+- **Saga** (orquestada o coreografiada) con compensaciones.
+- **Outbox** para publicar eventos de forma atómica con el cambio local.
+- **Idempotencia** con claves de idempotencia y reintentos con backoff.
+- **Errores**: estados intermedios explícitos (`Pendiente`, `Fallida`, `Compensada`), timeouts, dead-letter queues y trazabilidad con correlation ID.
+- Dentro de un servicio, transacción local y concurrencia optimista (409 ante conflicto).
+
+### 4. Pruebas unitarias y de integración
+- **Unitarias** (xUnit, Moq/NSubstitute, FluentAssertions): dominio, validadores y casos de uso.
+- **Integración** (`WebApplicationFactory` + SQL Server como contenedor de servicio en CI, con el esquema del `.dacpac`): autenticación, autorización, aislamiento entre usuarios, decisiones, concurrencia, caché, formato de errores y coherencia entre el mapeo de EF y el esquema. En local se omiten salvo que se defina `CBL_TEST_SQL`.
+- **Front-end** (Karma + Jasmine): reducers, selectores, efectos, guards, interceptores, formularios y componentes, además de comprobaciones de contrato (tipos generados desde el OpenAPI) y de seguridad (sin `localStorage` ni HTML sin sanear).
+- **CI**: todo corre en cada cambio.
+
+### 5. Front-end
+- **Estado**: NgRx (acciones, reducers, efectos, selectores) con los slices `auth`, `loans` (incluye los límites de monto) y `users`. Solo los efectos llaman a la API; los componentes despachan acciones y leen selectores.
+- **Autenticación**: JWT de vida corta (10 minutos) guardado solo en memoria (nunca en `localStorage`, `sessionStorage` ni cookies); el interceptor añade el Bearer y cierra sesión ante 401, y un temporizador la cierra al expirar. «Cerrar sesión» llama a `POST /api/auth/logout` para revocar el token. Trade-off: se pierde al refrescar. Evolución: refresh token en cookie `HttpOnly`.
+- **Rutas**: `authGuard`, `adminGuard`, `borrowerGuard` y `guestGuard`; tras el login se vuelve a la ruta pedida, validada contra redirecciones abiertas. El backend siempre vuelve a validar.
+- **Formularios y errores**: Reactive Forms con validaciones en cliente; los errores de validación del servidor (422) se asignan a cada campo, y los 409, 423 (bloqueo con `Retry-After`) y 429 muestran mensajes específicos.
+- **Coherencia**: tras decidir un préstamo, los efectos actualizan el estado desde la respuesta de la API; una doble decisión (409) se informa y se recarga. Las decisiones repetidas sobre el mismo préstamo se serializan en el efecto.
+
+### 6. Spring Boot (equivalente ASP.NET Core)
+- **a) `@SpringBootApplication`**: combina `@Configuration`, `@EnableAutoConfiguration` y `@ComponentScan`; arranca el contexto, registra beans y aplica auto-configuración condicional. En ASP.NET Core: `WebApplication.CreateBuilder` configura host, configuración, logging y DI; `builder.Build()` y `app.Run()` arman el pipeline y arrancan.
+- **b) Ciclo de vida de un bean**: instanciación → inyección → `BeanPostProcessor`/`@PostConstruct` → uso → `@PreDestroy`. Se interviene con esos hooks, `@Scope` y `BeanPostProcessor`. En .NET: lifetimes `Singleton`, `Scoped`, `Transient`, `IHostedService` y `IDisposable`.
+- **c) Auto-configuración sin romper convención sobre configuración**: propiedades (`application.yml`), `@ConfigurationProperties`, `@ConditionalOnMissingBean` para reemplazar solo lo necesario y `exclude` puntual. En .NET: Options Pattern y `Configure<T>`.
+
 ## Stack
 .NET 8 · ASP.NET Core Web API · EF Core · JWT · FluentValidation · xUnit · SQL Server (proyecto `.sqlproj`)
 
@@ -106,7 +148,7 @@ Este proyecto se desarrolla con [GitHub Spec Kit](https://github.com/github/spec
 
 ## Documentación
 - Análisis: [docs/00-analisis.es.md](docs/00-analisis.es.md)
-- Parte teórica: [docs/teoria.es.md](docs/teoria.es.md)
+- Parte teórica: [sección «Parte teórica» de este README](#parte-teórica)
 - Bitácora de Spec Kit (prompts exactos por fase): [docs/speckit-log.md](docs/speckit-log.md)
 - Decisiones con alternativas descartadas: [docs/decisions](docs/decisions/README.md)
 - Planificación: [contexto](docs/planning/CONTEXT.md) · [tareas backend](docs/planning/tasks-backend.md) · [tareas DevOps](docs/planning/tasks-devops.md)
